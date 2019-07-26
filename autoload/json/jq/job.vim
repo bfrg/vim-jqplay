@@ -15,16 +15,20 @@ function! json#jq#job#filter(in_buf, start_line, end_line, out_buf, jq_cmd) abor
         call job_stop(g:jq_job)
     endif
 
-    let g:jq_job = job_start(
-            \ [&shell, &shellcmdflag, a:jq_cmd], {
-            \ 'in_io': 'buffer',
-            \ 'in_buf': a:in_buf,
-            \ 'in_top': a:start_line,
-            \ 'in_bot': a:end_line,
-            \ 'out_io': 'buffer',
-            \ 'out_buf': a:out_buf,
-            \ 'err_io': 'out'
-            \ })
+    " Issue: https://github.com/vim/vim/issues/4688
+    try
+        let g:jq_job = job_start(
+                \ [&shell, &shellcmdflag, a:jq_cmd], {
+                \ 'in_io': 'buffer',
+                \ 'in_buf': a:in_buf,
+                \ 'in_top': a:start_line,
+                \ 'in_bot': a:end_line,
+                \ 'out_io': 'buffer',
+                \ 'out_buf': a:out_buf,
+                \ 'err_io': 'out'
+                \ })
+    catch /^Vim\%((\a\+)\)\=:E631:/
+    endtry
 endfunction
 
 function! json#jq#job#stop(...) abort
