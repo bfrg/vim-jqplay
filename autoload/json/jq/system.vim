@@ -18,10 +18,6 @@ function! json#jq#system#filter(in_buf, start_line, end_line, out_buf, jq_cmd) a
     endif
 
     let l:output = system(a:jq_cmd, l:json_input)
-    " if v:shell_error
-    "     echo l:output
-    "     return
-    " endif
     call setbufline(a:out_buf, 1, split(l:output, "\n"))
 endfunction
 
