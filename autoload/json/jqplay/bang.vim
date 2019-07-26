@@ -1,6 +1,6 @@
 " ==============================================================================
 " Integration of jq (the command-line JSON processor) into Vim
-" File:         autoload/json/jq/bang.vim
+" File:         autoload/json/jqplay/bang.vim
 " Author:       bfrg <https://github.com/bfrg>
 " Website:      https://github.com/bfrg/vim-jqplay
 " Last Change:  July 25, 2019
@@ -12,8 +12,7 @@ set cpoptions&vim
 
 let s:jq_indent_limit = 2048
 
-" Filter current buffer in-place using |:range!| or |:!cmd|
-function! json#jq#bang#filter(start_line, end_line, jq_cmd) abort
+function! json#jqplay#bang#filter(start_line, end_line, jq_cmd) abort
     let l:trailing_comma = 0
     if getline(a:end_line) =~# ',\s*$'
         let l:trailing_comma = 1

@@ -1,6 +1,6 @@
 " ==============================================================================
 " Integration of jq (the command-line JSON processor) into Vim
-" File:         autoload/json/jq.vim
+" File:         autoload/json/jqplay.vim
 " Author:       bfrg <https://github.com/bfrg>
 " Website:      https://github.com/bfrg/vim-jqplay
 " Last Change:  July 25, 2019
@@ -37,7 +37,7 @@ function! s:json_scratch(bufname, mods) abort
     return l:out_buf
 endfunction
 
-function! json#jq#run(mods, bang, start_line, end_line, jq_filter) abort
+function! json#jqplay#run(mods, bang, start_line, end_line, jq_filter) abort
     let l:jq_cmd = printf('%s %s %s',
             \ get(b:, 'jq_exe', exepath('jq')),
             \ get(b:, 'jq_opts', '-M'),
@@ -54,7 +54,7 @@ function! json#jq#run(mods, bang, start_line, end_line, jq_filter) abort
     endif
 
     if a:bang
-        call json#jq#bang#filter(a:start_line, a:end_line, l:jq_cmd)
+        call json#jqplay#bang#filter(a:start_line, a:end_line, l:jq_cmd)
         let b:jq_cmd = l:jq_cmd
         let b:undo_ftplugin = get(b:, 'undo_ftplugin', '') . '| unlet! b:jq_cmd'
         let b:undo_ftplugin = substitute(b:undo_ftplugin, '^| ', '', '')
@@ -74,14 +74,14 @@ function! json#jq#run(mods, bang, start_line, end_line, jq_filter) abort
         call setbufvar(l:out_buf, 'undo_ftplugin', substitute(undo, '^| ', '', ''))
 
         if get(b:, 'jq_async', 1)
-            call json#jq#job#filter(l:in_buf, a:start_line, a:end_line, l:out_buf, l:jq_cmd)
+            call json#jqplay#job#filter(l:in_buf, a:start_line, a:end_line, l:out_buf, l:jq_cmd)
         else
-            call json#jq#system#filter(l:in_buf, a:start_line, a:end_line, l:out_buf, l:jq_cmd)
+            call json#jqplay#system#filter(l:in_buf, a:start_line, a:end_line, l:out_buf, l:jq_cmd)
         endif
     endif
 endfunction
 
-function! json#jq#complete(arglead, cmdline, cursorpos) abort
+function! json#jqplay#complete(arglead, cmdline, cursorpos) abort
     if a:arglead[0] ==# '-' || a:cmdline =~# '.*Jq\s\+$'
         return filter(
                 \ copy(['-a', '-C', '-c', '-e', '-f', '-h', '-j', '-L', '-M',

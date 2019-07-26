@@ -1,6 +1,6 @@
 " ==============================================================================
 " Integration of jq (the command-line JSON processor) into Vim
-" File:         autoload/json/jq/job.vim
+" File:         autoload/json/jqplay/job.vim
 " Author:       bfrg <https://github.com/bfrg>
 " Website:      https://github.com/bfrg/vim-jqplay
 " Last Change:  July 25, 2019
@@ -10,7 +10,7 @@
 let s:save_cpo = &cpoptions
 set cpoptions&vim
 
-function! json#jq#job#filter(in_buf, start_line, end_line, out_buf, jq_cmd) abort
+function! json#jqplay#job#filter(in_buf, start_line, end_line, out_buf, jq_cmd) abort
     if exists('g:jq_job') && job_status(g:jq_job) ==# 'run'
         call job_stop(g:jq_job)
     endif
@@ -31,7 +31,7 @@ function! json#jq#job#filter(in_buf, start_line, end_line, out_buf, jq_cmd) abor
     endtry
 endfunction
 
-function! json#jq#job#stop(...) abort
+function! json#jqplay#job#stop(...) abort
     if exists('g:jq_job')
         return job_stop(g:jq_job, a:0 ? a:1 : 'term')
     endif

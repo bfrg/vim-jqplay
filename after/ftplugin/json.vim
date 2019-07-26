@@ -10,7 +10,10 @@
 let s:cpo_save = &cpoptions
 set cpoptions&vim
 
-command! -buffer -nargs=1 -range=% -bang -complete=customlist,json#jq#complete Jq call json#jq#run(<q-mods>, <bang>0, <line1>, <line2>, <q-args>)
+" Apply a jq filter to the current buffer
+" :[range]Jq!  filter the buffer in-place using |:range!| |:!cmd|
+" :[range]Jq   redirect the output of jq to a new json buffer
+command! -buffer -nargs=1 -range=% -bang -complete=customlist,json#jqplay#complete Jq call json#jqplay#run(<q-mods>, <bang>0, <line1>, <line2>, <q-args>)
 
 let &cpoptions = s:cpo_save
 unlet s:cpo_save
