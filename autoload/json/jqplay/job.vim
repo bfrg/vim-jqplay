@@ -3,7 +3,7 @@
 " File:         autoload/json/jqplay/job.vim
 " Author:       bfrg <https://github.com/bfrg>
 " Website:      https://github.com/bfrg/vim-jqplay
-" Last Change:  July 27, 2019
+" Last Change:  Sep 3, 2019
 " License:      Same as Vim itself (see :h license)
 " ==============================================================================
 
@@ -15,7 +15,7 @@ function! json#jqplay#job#filter(in_buf, start_line, end_line, out_buf, jq_cmd) 
         call job_stop(g:jq_job)
     endif
 
-    let l:opts = {
+    let opts = {
             \ 'in_io': 'buffer',
             \ 'in_buf': a:in_buf,
             \ 'in_top': a:start_line,
@@ -25,17 +25,17 @@ function! json#jqplay#job#filter(in_buf, start_line, end_line, out_buf, jq_cmd) 
             \ 'err_io': 'out'
             \ }
 
-    " Issue: https://github.com/vim/vim/issues/4718
+    " https://github.com/vim/vim/issues/4718
     if has('patch-8.1.1757')
-        call extend(l:opts, {
+        call extend(opts, {
                 \ 'err_io': 'pipe',
                 \ 'err_cb': {_, msg -> appendbufline(a:out_buf, '$', '// ' . msg)}
                 \ })
     endif
 
-    " Issue: https://github.com/vim/vim/issues/4688
+    " See Issue: https://github.com/vim/vim/issues/4688
     try
-        let g:jq_job = job_start([&shell, &shellcmdflag, a:jq_cmd], l:opts)
+        let g:jq_job = job_start([&shell, &shellcmdflag, a:jq_cmd], opts)
     catch /^Vim\%((\a\+)\)\=:E631:/
     endtry
 endfunction
