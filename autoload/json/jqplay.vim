@@ -3,12 +3,23 @@
 " File:         autoload/json/jqplay.vim
 " Author:       bfrg <https://github.com/bfrg>
 " Website:      https://github.com/bfrg/vim-jqplay
-" Last Change:  Oct 18, 2019
+" Last Change:  Oct 19, 2019
 " License:      Same as Vim itself (see :h license)
 " ==============================================================================
 
 let s:save_cpo = &cpoptions
 set cpoptions&vim
+
+let s:defaults = {
+        \ 'exe': exepath('jq'),
+        \ 'opts': '--tab',
+        \ 'async': 1
+        \ }
+
+function! s:get(key) abort
+    let jqplay = get(b:, 'jqplay', get(g:, 'jqplay', {}))
+    return has_key(jqplay, a:key) ? get(jqplay, a:key) : get(s:defaults, a:key)
+endfunction
 
 function! s:json_scratch(bufname, mods) abort
     let out_buf = bufnr(a:bufname, 1)
@@ -38,17 +49,12 @@ function! s:json_scratch(bufname, mods) abort
 endfunction
 
 function! json#jqplay#run(mods, bang, start_line, end_line, jq_filter) abort
-    let jq_cmd = printf('%s %s %s',
-            \ get(b:, 'jq_exe', exepath('jq')),
-            \ get(b:, 'jq_opts', ''),
-            \ a:jq_filter
-            \ )
-
-    " Print help
     if a:jq_filter =~# '-h\>\|--help\>'
-        echo system(get(b:, 'jq_exe', exepath('jq')) . ' --help')
+        echo system(s:get('exe') .. ' --help')
         return
     endif
+
+    let jq_cmd = printf('%s %s %s', s:get('exe'), s:get('opts'), a:jq_filter)
 
     if a:bang
         let b:jq = {
@@ -74,7 +80,7 @@ function! json#jqplay#run(mods, bang, start_line, end_line, jq_filter) abort
         let undo = getbufvar(out_buf, 'undo_ftplugin', 'execute') . '| unlet! b:jq'
         call setbufvar(out_buf, 'undo_ftplugin', undo)
 
-        if get(b:, 'jq_async', 1)
+        if s:get('async')
             call json#jqplay#job#filter(in_buf, a:start_line, a:end_line, out_buf, jq_cmd)
         else
             call json#jqplay#system#filter(in_buf, a:start_line, a:end_line, out_buf, jq_cmd)
