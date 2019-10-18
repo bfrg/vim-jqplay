@@ -40,16 +40,13 @@ endfunction
 function! json#jqplay#run(mods, bang, start_line, end_line, jq_filter) abort
     let jq_cmd = printf('%s %s %s',
             \ get(b:, 'jq_exe', exepath('jq')),
-            \ get(b:, 'jq_opts', '-M'),
+            \ get(b:, 'jq_opts', ''),
             \ a:jq_filter
             \ )
 
-    " Quickly print help or version number
+    " Print help
     if a:jq_filter =~# '-h\>\|--help\>'
         echo system(get(b:, 'jq_exe', exepath('jq')) . ' --help')
-        return
-    elseif a:jq_filter =~# '--version\>'
-        echo system(get(b:, 'jq_exe', exepath('jq')) . ' --version')
         return
     endif
 
