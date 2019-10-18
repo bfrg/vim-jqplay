@@ -13,11 +13,11 @@ set cpoptions&vim
 function! s:json_scratch(bufname, mods) abort
     let out_buf = bufnr(a:bufname, 1)
 
-    " Note: setting the filetype at last will allow users to override the other
-    " buffer-local options in either after/ftplugin/json.vim, or using a
-    " FileType autocommand
     " New buffers returned by bufnr({expr}, 1) are unloaded
     if !bufloaded(out_buf)
+        " Setting the filetype at last will allow users to override the other
+        " buffer-local options in after/ftplugin/json.vim, or using a FileType
+        " autocommand
         call setbufvar(out_buf, '&swapfile', 0)
         call setbufvar(out_buf, '&buflisted', 1)
         call setbufvar(out_buf, '&buftype', 'nofile')
@@ -27,11 +27,11 @@ function! s:json_scratch(bufname, mods) abort
 
     " Make sure buffer is visible
     if bufwinnr(out_buf) == -1
-        silent execute a:mods 'keepalt sbuffer' fnameescape(a:bufname)
+        silent execute a:mods 'keepalt sbuffer' out_buf
         wincmd p
     endif
 
-    " Issue: https://github.com/vim/vim/issues/4718
+    " Issue: https://github.com/vim/vim/issues/4745
     silent call deletebufline(out_buf, 1, '$')
 
     return out_buf
