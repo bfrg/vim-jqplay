@@ -3,7 +3,7 @@
 " File:         autoload/json/jqplay.vim
 " Author:       bfrg <https://github.com/bfrg>
 " Website:      https://github.com/bfrg/vim-jqplay
-" Last Change:  Sep 3, 2019
+" Last Change:  Oct 18, 2019
 " License:      Same as Vim itself (see :h license)
 " ==============================================================================
 
@@ -51,10 +51,14 @@ function! json#jqplay#run(mods, bang, start_line, end_line, jq_filter) abort
     endif
 
     if a:bang
-        call json#jqplay#bang#filter(a:start_line, a:end_line, jq_cmd)
-        let b:jq_cmd = jq_cmd
-        let b:undo_ftplugin = get(b:, 'undo_ftplugin', '') . '| unlet! b:jq_cmd'
+        let b:jq = {
+                \ 'start_line': a:start_line,
+                \ 'end_line': a:end_line,
+                \ 'cmd': jq_cmd
+                \ }
+        let b:undo_ftplugin = get(b:, 'undo_ftplugin', '') . '| unlet! b:jq'
         let b:undo_ftplugin = substitute(b:undo_ftplugin, '^| ', '', '')
+        call json#jqplay#bang#filter(a:start_line, a:end_line, jq_cmd)
     else
         let in_buf = bufnr('%')
         let in_name = expand('%:p')
@@ -67,8 +71,8 @@ function! json#jqplay#run(mods, bang, start_line, end_line, jq_filter) abort
                 \ 'file':  in_name,
                 \ 'cmd': jq_cmd
                 \ })
-        let undo = getbufvar(out_buf, 'undo_ftplugin', '') . '| unlet! b:jq'
-        call setbufvar(out_buf, 'undo_ftplugin', substitute(undo, '^| ', '', ''))
+        let undo = getbufvar(out_buf, 'undo_ftplugin', 'execute') . '| unlet! b:jq'
+        call setbufvar(out_buf, 'undo_ftplugin', undo)
 
         if get(b:, 'jq_async', 1)
             call json#jqplay#job#filter(in_buf, a:start_line, a:end_line, out_buf, jq_cmd)
