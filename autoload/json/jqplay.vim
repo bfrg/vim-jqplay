@@ -67,14 +67,13 @@ function! json#jqplay#run(mods, bang, start_line, end_line, jq_filter) abort
         call json#jqplay#bang#filter(a:start_line, a:end_line, s:get('maxindent'), jq_cmd)
     else
         let in_buf = bufnr('%')
-        let in_name = expand('%:p')
         let out_name = 'jq-output://' . expand('%:p')
         let out_buf = s:json_scratch(out_name, a:mods)
 
         call setbufvar(out_buf, 'jqinfo', {
                 \ 'start_line': a:start_line,
                 \ 'end_line': a:end_line,
-                \ 'file':  in_name,
+                \ 'in_buf':  in_buf,
                 \ 'cmd': jq_cmd
                 \ })
         let undo = getbufvar(out_buf, 'undo_ftplugin', 'execute') . '| unlet! b:jqinfo'
