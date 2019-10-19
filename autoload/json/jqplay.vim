@@ -58,13 +58,12 @@ function! json#jqplay#run(mods, bang, start_line, end_line, jq_filter) abort
     let jq_cmd = printf('%s %s %s', s:get('exe'), s:get('opts'), a:jq_filter)
 
     if a:bang
-        let b:jq = {
+        let b:jqinfo = {
                 \ 'start_line': a:start_line,
                 \ 'end_line': a:end_line,
                 \ 'cmd': jq_cmd
                 \ }
-        let b:undo_ftplugin = get(b:, 'undo_ftplugin', '') . '| unlet! b:jq'
-        let b:undo_ftplugin = substitute(b:undo_ftplugin, '^| ', '', '')
+        let b:undo_ftplugin = get(b:, 'undo_ftplugin', 'execute') . '| unlet! b:jqinfo'
         call json#jqplay#bang#filter(a:start_line, a:end_line, s:get('maxindent'), jq_cmd)
     else
         let in_buf = bufnr('%')
@@ -72,13 +71,13 @@ function! json#jqplay#run(mods, bang, start_line, end_line, jq_filter) abort
         let out_name = 'jq-output://' . expand('%:p')
         let out_buf = s:json_scratch(out_name, a:mods)
 
-        call setbufvar(out_buf, 'jq', {
+        call setbufvar(out_buf, 'jqinfo', {
                 \ 'start_line': a:start_line,
                 \ 'end_line': a:end_line,
                 \ 'file':  in_name,
                 \ 'cmd': jq_cmd
                 \ })
-        let undo = getbufvar(out_buf, 'undo_ftplugin', 'execute') . '| unlet! b:jq'
+        let undo = getbufvar(out_buf, 'undo_ftplugin', 'execute') . '| unlet! b:jqinfo'
         call setbufvar(out_buf, 'undo_ftplugin', undo)
 
         if s:get('async')
