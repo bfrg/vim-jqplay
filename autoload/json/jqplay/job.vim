@@ -3,7 +3,7 @@
 " File:         autoload/json/jqplay/job.vim
 " Author:       bfrg <https://github.com/bfrg>
 " Website:      https://github.com/bfrg/vim-jqplay
-" Last Change:  Sep 3, 2019
+" Last Change:  Oct 19, 2019
 " License:      Same as Vim itself (see :h license)
 " ==============================================================================
 
@@ -26,6 +26,7 @@ function! json#jqplay#job#filter(in_buf, start_line, end_line, out_buf, jq_cmd) 
             \ }
 
     " https://github.com/vim/vim/issues/4718
+    " Note: this only occurs when out_io is written to a buffer
     if has('patch-8.1.1757')
         call extend(opts, {
                 \ 'err_io': 'pipe',
