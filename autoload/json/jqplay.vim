@@ -13,7 +13,8 @@ set cpoptions&vim
 let s:defaults = {
         \ 'exe': exepath('jq'),
         \ 'opts': '--tab',
-        \ 'async': 1
+        \ 'async': 1,
+        \ 'maxindent': 2048
         \ }
 
 function! s:get(key) abort
@@ -64,7 +65,7 @@ function! json#jqplay#run(mods, bang, start_line, end_line, jq_filter) abort
                 \ }
         let b:undo_ftplugin = get(b:, 'undo_ftplugin', '') . '| unlet! b:jq'
         let b:undo_ftplugin = substitute(b:undo_ftplugin, '^| ', '', '')
-        call json#jqplay#bang#filter(a:start_line, a:end_line, jq_cmd)
+        call json#jqplay#bang#filter(a:start_line, a:end_line, s:get('maxindent'), jq_cmd)
     else
         let in_buf = bufnr('%')
         let in_name = expand('%:p')

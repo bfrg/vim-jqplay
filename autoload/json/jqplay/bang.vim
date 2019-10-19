@@ -3,14 +3,14 @@
 " File:         autoload/json/jqplay/bang.vim
 " Author:       bfrg <https://github.com/bfrg>
 " Website:      https://github.com/bfrg/vim-jqplay
-" Last Change:  Sep 3, 2019
+" Last Change:  Oct 19, 2019
 " License:      Same as Vim itself (see :h license)
 " ==============================================================================
 
 let s:save_cpo = &cpoptions
 set cpoptions&vim
 
-function! json#jqplay#bang#filter(start_line, end_line, jq_cmd) abort
+function! json#jqplay#bang#filter(start_line, end_line, maxindent, jq_cmd) abort
     let trailing_comma = 0
     if getline(a:end_line) =~# ',\s*$'
         let trailing_comma = 1
@@ -24,8 +24,7 @@ function! json#jqplay#bang#filter(start_line, end_line, jq_cmd) abort
         call setline("']", getline("']") . ',')
     endif
 
-    let limit = get(b:, 'jq_indent_limit', 2048)
-    if limit > getpos("']")[1] - getpos("'[")[1]
+    if a:maxindent > getpos("']")[1] - getpos("'[")[1]
             \ && a:jq_cmd !~# '\<--compact-output\>\|\<-c\>'
             \ && a:start_line != 1
             \ && a:end_line != line('$')
