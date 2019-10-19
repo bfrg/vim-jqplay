@@ -33,6 +33,10 @@ function! json#jqplay#job#filter(in_buf, start_line, end_line, out_buf, jq_cmd) 
     endtry
 endfunction
 
+function! json#jqplay#job#stophow(arglead, cmdline, cursorpos) abort
+    return join(['term', 'hup', 'quit', 'int', 'kill'], "\n")
+endfunction
+
 function! json#jqplay#job#stop(...) abort
     if exists('g:jq_job')
         return job_stop(g:jq_job, a:0 ? a:1 : 'term')
