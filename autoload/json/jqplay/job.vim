@@ -20,21 +20,13 @@ function! json#jqplay#job#filter(in_buf, start_line, end_line, out_buf, jq_cmd) 
             \ 'in_buf': a:in_buf,
             \ 'in_top': a:start_line,
             \ 'in_bot': a:end_line,
-            \ 'out_io': 'buffer',
-            \ 'out_buf': a:out_buf,
-            \ 'err_io': 'out'
+            \ 'out_io': 'pipe',
+            \ 'err_io': 'pipe',
+            \ 'out_cb': {_,msg -> appendbufline(a:out_buf, '$', msg)},
+            \ 'err_cb': {_,msg -> appendbufline(a:out_buf, '$', '// ' . msg)}
             \ }
 
-    " https://github.com/vim/vim/issues/4718
-    " Note: this only occurs when out_io is written to a buffer
-    if has('patch-8.1.1757')
-        call extend(opts, {
-                \ 'err_io': 'pipe',
-                \ 'err_cb': {_, msg -> appendbufline(a:out_buf, '$', '// ' . msg)}
-                \ })
-    endif
-
-    " See Issue: https://github.com/vim/vim/issues/4688
+    " https://github.com/vim/vim/issues/4688
     try
         let g:jq_job = job_start([&shell, &shellcmdflag, a:jq_cmd], opts)
     catch /^Vim\%((\a\+)\)\=:E631:/
