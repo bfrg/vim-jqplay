@@ -18,5 +18,8 @@ command! -buffer -nargs=1 -range=% -bang -complete=customlist,json#jqplay#comple
 " Stop any running jq process, internally calls job_stop()
 command! -buffer -nargs=? -complete=custom,json#jqplay#stophow JqStop call json#jqplay#stop(<f-args>)
 
+let b:undo_ftplugin = get(b:, 'undo_ftplugin', 'execute')
+        \ . ' | delcommand Jq | delcommand JqStop'
+
 let &cpoptions = s:cpo_save
 unlet s:cpo_save
