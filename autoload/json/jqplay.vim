@@ -12,7 +12,7 @@ set cpoptions&vim
 
 let s:defaults = {
         \ 'exe': exepath('jq'),
-        \ 'opts': '--tab',
+        \ 'opts': '',
         \ 'async': 1,
         \ 'maxindent': 2048,
         \ 'autocmds': ['InsertLeave', 'TextChanged']
@@ -263,7 +263,7 @@ function! json#jqplay#complete(arglead, cmdline, cursorpos) abort
                 \ '--join-output', '--jsonargs', '--monochrome-output',
                 \ '--null-input', '--raw-input', '--raw-output', '--run-tests',
                 \ '--seq', '--slurp', '--slurpfile', '--sort-keys', '--stream',
-                \ '--tab', '--unbuffered', '--version']),
+                \ '--tab', '--unbuffered']),
                 \ 'stridx(v:val, a:arglead) == 0')
     else
         return map(getcompletion(a:arglead, 'file'), 'fnameescape(v:val)')
