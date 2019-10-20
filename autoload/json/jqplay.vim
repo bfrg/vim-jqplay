@@ -89,6 +89,10 @@ function! json#jqplay#scratch(mods, jq_opts) abort
         return s:error('jqplay: currently only one session per Vim instance is allowed.')
     endif
 
+    if empty(s:get('autocmds'))
+        return s:error('jqplay: no autocommands specified in the "autocmds" entry')
+    endif
+
     let in_buf = bufnr('%')
     let out_name = 'jq-output://' . expand('%')
     let out_buf = s:json_scratch(out_name, a:mods)
@@ -118,9 +122,7 @@ function! json#jqplay#scratch(mods, jq_opts) abort
     call setbufvar(in_buf, 'jq_changedtick', getbufvar(in_buf, 'changedtick'))
     call setbufvar(jqfilter_buf, 'jq_changedtick', getbufvar(jqfilter_buf, 'changedtick'))
 
-    if !empty(s:get('autocmds'))
-        call s:set_autocmds()
-    endif
+    call s:set_autocmds()
     execute "command! -bar -bang JqplayClose call json#jqplay#closeall(<bang>0)"
 endfunction
 
