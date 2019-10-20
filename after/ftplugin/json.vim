@@ -15,11 +15,20 @@ set cpoptions&vim
 " :[range]Jq   redirect the output of jq to a new json buffer
 command! -buffer -nargs=1 -range=% -bang -complete=customlist,json#jqplay#complete Jq call json#jqplay#run(<q-mods>, <bang>0, <line1>, <line2>, <q-args>)
 
+" Open a jq scratch buffer with the current buffer as input
+command! -buffer -nargs=? -complete=customlist,json#jqplay#complete Jqplay call json#jqplay#scratch(<q-mods>, <q-args>)
+
+" :JqplayClose  close scratch-filter and output buffers and remove autocmds
+" :JqplayClose! delete scratch-filter and output buffers and remove autocmds
+" Stop any running jq process
+command! -buffer -bang JqplayClose call json#jqplay#closeall(<bang>0)
+
 " Stop any running jq process, internally calls job_stop()
 command! -buffer -nargs=? -complete=custom,json#jqplay#job#stophow JqStop call json#jqplay#job#stop(<f-args>)
 
 let b:undo_ftplugin = get(b:, 'undo_ftplugin', 'execute')
         \ . ' | delcommand Jq | delcommand JqStop'
+        \ . ' | delcommand Jqplay | delcommand JqplayClose'
 
 let &cpoptions = s:cpo_save
 unlet s:cpo_save

@@ -8,10 +8,13 @@ License:    Same terms as Vim itself (see |license|)
 ==============================================================================
 INTRODUCTION                                                    *jqplay-intro*
 
-Run jq (the command-line JSON processor) from Vim's |Command-line| on the
-current json buffer, and display the output in a new split window, or replace
-the input buffer with jq's output directly, hence acting as a filter.
+1. Run jq (the command-line JSON processor) from Vim's |Command-line| on a
+   json buffer, and display the output in a new |:split| window, or replace
+   the input buffer with jq's output directly, hence acting as a filter.
 
+2. Alternatively, open a jq scratch buffer and apply it interactively on the
+   input buffer while both the jq filter buffer or the json input buffer are
+   being modified, similar to https://jqplay.org.
 
 ==============================================================================
 USAGE                                                           *jqplay-usage*
@@ -60,10 +63,37 @@ USAGE                                                           *jqplay-usage*
             unless disabled through the "async" key in |b:jqplay| or
             |g:jqplay| (see below).
 
+:Jqplay {args}                                                *jqplay-:Jqplay*
+            Open a new jq scratch buffer and apply the edited jq filter
+            interactively to the current json buffer while both the jq buffer
+            or the input buffer are being modified. The output is displayed in
+            a separate |:split| window similar to the |jqplay-:Jq| command
+            without the [!].
+
+            By default jq is run whenever the |InsertLeave| or |TextChanged|
+            events have been triggered. The list of autocommands can be
+            changed with the "autocmds" key, see |jqplay-autocmds| below.
+
+            {args} can be any jq command-line arguments, except for the "-f"
+            or "--from-file" options since the buffer content of the jq
+            scratch buffer is already passed to jq through this option.
+
+            Note: currently no [range] can be specified since there is no
+            simple way to update the start and end line when lines are being
+            added to or deleted from the json input buffer.
+            TODO: check |listener_add()|.
+
+:JqplayClose[!]                                          *jqplay-:JqplayClose*
+            Remove the autocommands that re-run jq, and keep the jq scratch
+            buffer and the jq output buffer open.
+
+            Add [!] to also |:bdelete| both buffers.
+
 :JqStop [{how}]                                               *jqplay-:JqStop*
             Stop any running jq process that was previously started with
-            ":Jq". When {how} is omitted, the job will be terminated. See
-            |job_stop()| for more details on the {how} values.
+            |jqplay-:Jq| or |jqplay-:Jqplay|. When {how} is omitted, the job will
+            be terminated. See |job_stop()| for more details on the {how}
+            values.
 
 ==============================================================================
 CONFIGURATION                                                  *jqplay-config*
@@ -97,6 +127,13 @@ the global |Dictionary| g:jqplay. The following keys are supported:
             "-c" were passed. Setting "maxindent" to zero or a negative value
             will disable reindentation.
             Default: 2048
+                                                             *jqplay-autocmds*
+"autocmds" ~
+            List of |autocmd-events| used for the |jqplay-:Jqplay| command
+            that specify when to re-run jq. The plugin will set buffer-local
+            autocommands for both the input json buffer and the jq scratch
+            buffer.
+            Default: |InsertLeave| and |TextChanged|
 
 Note: The |buffer-variable| b:jqplay must be specified for json filetypes,
 for example, in after/ftplugin/json.vim.
@@ -107,16 +144,17 @@ Examples ~
     let g:jqplay = {
             \ 'exe': '~/.local/bin/jq',
             \ 'opts': '--tab',
-            \ 'async': 1
+            \ 'async': 1,
+            \ 'autocmds': ['TextChanged', 'CursorHoldI', 'InsertLeave'],
             \ }
 
     " alternatively, in after/ftplugin/json.vim
     let b:jqplay = {
             \ 'opts': '--indent 4',
-            \ 'async': 0
+            \ 'async': 0,
+            \ 'autocmds': ['TextChanged', 'CursorHoldI', 'InsertLeave'],
             \ }
 <
-
 ==============================================================================
 FAQ                                                               *jqplay-faq*
 
