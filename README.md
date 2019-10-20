@@ -38,9 +38,11 @@ scratch buffer are being modified, by default whenever the `InsertLeave` or
 `TextChanged` event are triggered. See `:help jqplay-config` on how to change
 the `autocmds`.
 
+Run `:Jqrun` to invoke `jq` manually at any time.
+
 Running `:JqplayClose` will remove the autocommands and keep the `jq` scratch
-buffer and the jq output buffer open. Running `:JqplayClose!` with a bang will
-additionally delete both buffers.
+buffer and the jq-output buffer open. Running `:JqplayClose!` with a bang will
+also delete both buffers.
 
 `jq` processes previously started with `:Jq` or `:Jqplay` can be stopped at any
 time with `:JqStop`.

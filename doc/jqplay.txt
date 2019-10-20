@@ -94,6 +94,13 @@ USAGE                                                           *jqplay-usage*
             The command is available only after running ":Jqplay", and is
             deleted after the first invocation.
 
+:Jqrun                                                         *jqplay-:Jqrun*
+            Invoke jq manually. This command is useful when the
+            |jqplay-autocmds| entry has been set to an empty list.
+
+            This command is available only after running ":Jqplay", and is
+            deleted after ":JqplayClose".
+
 :JqStop [{how}]                                               *jqplay-:JqStop*
             Stop any running jq process that was previously started with
             |jqplay-:Jq| or |jqplay-:Jqplay|. When {how} is omitted, the job will
@@ -135,9 +142,11 @@ the global |Dictionary| g:jqplay. The following keys are supported:
                                                              *jqplay-autocmds*
 "autocmds" ~
             List of |autocmd-events| used for the |jqplay-:Jqplay| command
-            that specify when to re-run jq. The plugin will set buffer-local
+            that specifies when to re-run jq. The plugin will set buffer-local
             autocommands for both the input json buffer and the jq scratch
-            buffer.
+            buffer. If you don't want to call jq interactively on every buffer
+            change, set this entry to an empty list and run |jqplay-:Jqrun| on
+            demand.
             Default: |InsertLeave| and |TextChanged|
 
 Note: The |buffer-variable| b:jqplay must be specified for json filetypes,

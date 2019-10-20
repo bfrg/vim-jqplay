@@ -89,10 +89,6 @@ function! json#jqplay#scratch(mods, jq_opts) abort
         return s:error('jqplay: currently only one session per Vim instance is allowed.')
     endif
 
-    if empty(s:get('autocmds'))
-        return s:error('jqplay: no autocommands specified in the "autocmds" entry')
-    endif
-
     let in_buf = bufnr('%')
     let out_name = 'jq-output://' . expand('%')
     let out_buf = s:json_scratch(out_name, a:mods)
@@ -122,8 +118,11 @@ function! json#jqplay#scratch(mods, jq_opts) abort
     call setbufvar(in_buf, 'jq_changedtick', getbufvar(in_buf, 'changedtick'))
     call setbufvar(jqfilter_buf, 'jq_changedtick', getbufvar(jqfilter_buf, 'changedtick'))
 
-    call s:set_autocmds()
+    if !empty(s:get('autocmds'))
+        call s:set_autocmds()
+    endif
     execute "command! -bar -bang JqplayClose call json#jqplay#closeall(<bang>0)"
+    execute "command! -bar Jqrun call s:run_manually()"
 endfunction
 
 function! s:set_autocmds() abort
@@ -169,7 +168,23 @@ function! json#jqplay#closeall(bang) abort
     let s:jqplay_open = 0
     autocmd! jqplay
     delcommand JqplayClose
+    delcommand Jqrun
     echohl WarningMsg | echomsg 'jqplay session closed' | echohl None
+endfunction
+
+function! s:run_manually() abort
+    let in_buf = s:jq_ctx.in_buf
+    let filter_buf = s:jq_ctx.filter_buf
+    let in_tick = getbufvar(in_buf, 'jq_changedtick')
+    let filter_tick = getbufvar(filter_buf, 'jq_changedtick')
+    if in_tick == getbufvar(in_buf, 'changedtick')
+            \ && filter_tick == getbufvar(filter_buf, 'changedtick')
+        return
+    endif
+    if filter_tick != getbufvar(filter_buf, 'changedtick')
+        call writefile(getbufline(filter_buf, 1, '$'), s:jq_ctx.filter_file)
+    endif
+    call s:jq_job(function('s:close_cb_2', [in_buf, filter_buf]))
 endfunction
 
 function! s:filter_changed() abort
@@ -178,7 +193,7 @@ function! s:filter_changed() abort
         return
     endif
     call writefile(getbufline(filter_buf, 1, '$'), s:jq_ctx.filter_file)
-    call s:jq_job(filter_buf)
+    call s:jq_job(function('s:close_cb', [filter_buf]))
 endfunction
 
 function! s:input_changed() abort
@@ -186,7 +201,7 @@ function! s:input_changed() abort
     if getbufvar(in_buf, 'jq_changedtick') == getbufvar(in_buf, 'changedtick')
         return
     endif
-    call s:jq_job(in_buf)
+    call s:jq_job(function('s:close_cb', [in_buf]))
 endfunction
 
 function! s:close_cb(buf, channel) abort
@@ -194,7 +209,13 @@ function! s:close_cb(buf, channel) abort
     call setbufvar(a:buf, 'jq_changedtick', getbufvar(a:buf, 'changedtick'))
 endfunction
 
-function! s:jq_job(buf) abort
+function! s:close_cb_2(buf1, buf2, channel) abort
+    silent call deletebufline(s:jq_ctx.out_buf, 1)
+    call setbufvar(a:buf1, 'jq_changedtick', getbufvar(a:buf1, 'changedtick'))
+    call setbufvar(a:buf2, 'jq_changedtick', getbufvar(a:buf2, 'changedtick'))
+endfunction
+
+function! s:jq_job(close_cb) abort
     silent call deletebufline(s:jq_ctx.out_buf, 1, '$')
 
     if exists('g:jq_job') && job_status(g:jq_job) ==# 'run'
@@ -210,7 +231,7 @@ function! s:jq_job(buf) abort
                 \ 'in_buf': s:jq_ctx.in_buf,
                 \ 'out_cb': {_,msg -> appendbufline(s:jq_ctx.out_buf, '$', msg)},
                 \ 'err_cb': {_,msg -> appendbufline(s:jq_ctx.out_buf, '$', '// ' . msg)},
-                \ 'close_cb': function('s:close_cb', [a:buf])
+                \ 'close_cb': a:close_cb
                 \ })
     catch /^Vim\%((\a\+)\)\=:E631:/
     endtry
