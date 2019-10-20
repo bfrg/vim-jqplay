@@ -148,17 +148,24 @@ function! json#jqplay#ctx() abort
 endfunction
 
 function! json#jqplay#closeall(bang) abort
-    call json#jqplay#stop()
-    if a:bang
-        noautocmd execute 'bdelete' s:jq_ctx.filter_buf
-        noautocmd execute 'bdelete' s:jq_ctx.out_buf
+    if !s:jqplay_open
+        return
     endif
+    call json#jqplay#stop()
+
+    if a:bang
+        if bufexists(s:jq_ctx.filter_buf)
+            noautocmd execute 'bdelete' s:jq_ctx.filter_buf
+        endif
+        if bufexists(s:jq_ctx.out_buf)
+            noautocmd execute 'bdelete' s:jq_ctx.out_buf
+        endif
+    endif
+
     unlockvar s:jq_ctx
     let s:jqplay_open = 0
     autocmd! jqplay
-    echohl WarningMsg
-    echo 'jqplay session closed.'
-    echohl None
+    echohl WarningMsg | echo 'jqplay session closed.' | echohl None
 endfunction
 
 function! s:filter_changed() abort
