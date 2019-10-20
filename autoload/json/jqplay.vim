@@ -223,7 +223,7 @@ function! json#jqplay#run(mods, bang, start_line, end_line, jq_filter) abort
         call json#jqplay#bang#filter(a:start_line, a:end_line, s:get('maxindent'), jq_cmd)
     else
         let in_buf = bufnr('%')
-        let out_name = 'jq-output://' . expand('%:p')
+        let out_name = 'jq-output://' . expand('%')
         let out_buf = s:json_scratch(out_name, a:mods)
 
         call setbufvar(out_buf, 'jqinfo', {
