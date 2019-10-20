@@ -84,10 +84,15 @@ USAGE                                                           *jqplay-usage*
             TODO: check |listener_add()|.
 
 :JqplayClose[!]                                          *jqplay-:JqplayClose*
-            Remove the autocommands that re-run jq, and keep the jq scratch
-            buffer and the jq output buffer open.
+            Close the interactive jqplay session. This will delete all
+            autocommands which are re-running jq on buffer change.
 
-            Add [!] to also |:bdelete| both buffers.
+            By default the jq scratch buffer and the output buffer are kept
+            open. Add [!] to also |:bdelete| both buffers. Think of
+            "JqplayClose!" as "I am done, close everything".
+
+            The command is available only after running ":Jqplay", and is
+            deleted after the first invocation.
 
 :JqStop [{how}]                                               *jqplay-:JqStop*
             Stop any running jq process that was previously started with

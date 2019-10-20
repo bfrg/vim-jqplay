@@ -3,7 +3,7 @@
 " File:         autoload/json/jqplay.vim
 " Author:       bfrg <https://github.com/bfrg>
 " Website:      https://github.com/bfrg/vim-jqplay
-" Last Change:  Oct 20, 2019
+" Last Change:  Oct 21, 2019
 " License:      Same as Vim itself (see :h license)
 " ==============================================================================
 
@@ -121,6 +121,7 @@ function! json#jqplay#scratch(mods, jq_opts) abort
     if !empty(s:get('autocmds'))
         call s:set_autocmds()
     endif
+    execute "command! -bar -bang JqplayClose call json#jqplay#closeall(<bang>0)"
 endfunction
 
 function! s:set_autocmds() abort
@@ -165,7 +166,8 @@ function! json#jqplay#closeall(bang) abort
     unlockvar s:jq_ctx
     let s:jqplay_open = 0
     autocmd! jqplay
-    echohl WarningMsg | echo 'jqplay session closed.' | echohl None
+    delcommand JqplayClose
+    echohl WarningMsg | echomsg 'jqplay session closed' | echohl None
 endfunction
 
 function! s:filter_changed() abort
