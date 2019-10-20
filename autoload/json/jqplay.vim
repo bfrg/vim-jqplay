@@ -178,7 +178,7 @@ function! s:filter_changed() abort
         return
     endif
     call writefile(getbufline(filter_buf, 1, '$'), s:jq_ctx.filter_file)
-    call s:runjq(filter_buf)
+    call s:jq_job(filter_buf)
 endfunction
 
 function! s:input_changed() abort
@@ -186,7 +186,7 @@ function! s:input_changed() abort
     if getbufvar(in_buf, 'jq_changedtick') == getbufvar(in_buf, 'changedtick')
         return
     endif
-    call s:runjq(in_buf)
+    call s:jq_job(in_buf)
 endfunction
 
 function! s:close_cb(buf, channel) abort
@@ -194,8 +194,8 @@ function! s:close_cb(buf, channel) abort
     call setbufvar(a:buf, 'jq_changedtick', getbufvar(a:buf, 'changedtick'))
 endfunction
 
-function! s:runjq(buf) abort
-    silent call deletebufline(a:jq_ctx.out_buf, 1, '$')
+function! s:jq_job(buf) abort
+    silent call deletebufline(s:jq_ctx.out_buf, 1, '$')
 
     if exists('g:jq_job') && job_status(g:jq_job) ==# 'run'
         call job_stop(g:jq_job)
