@@ -1,0 +1,145 @@
+*jqplay.txt*  Integration of jq (the command-line JSON processor) into Vim
+
+Author:     bfrg <http://github.com/bfrg>
+Website:    https://github.com/bfrg/vim-jqplay
+License:    Same terms as Vim itself (see |license|)
+
+
+==============================================================================
+INTRODUCTION                                                    *jqplay-intro*
+
+Run jq (the command-line JSON processor) from Vim's |Command-line| on the
+current json buffer, and display the output in a new split window, or replace
+the input buffer with jq's output directly, hence acting as a filter.
+
+
+==============================================================================
+USAGE                                                           *jqplay-usage*
+
+:[range]Jq[!] {args}                                              *jqplay-:Jq*
+            Run jq with the arguments {args} and the current json buffer as
+            input.
+
+            {args} can be any jq command-line arguments as you would write
+            them in the shell.
+
+            If a [range] is specified, only the selected lines are passed to
+            jq as input.
+
+            Note: trailing commas in the last line of the [range] are removed
+            in order to avoid jq parsing errors.
+
+            By default the output is displayed in a new |:split| window. The
+            name of the output buffer is prefixed with "jq-output://" to
+            distinguish it from the input buffer.
+
+            The command can be preceded by a command modifier. For example, to
+            open the output buffer in a new |:vertical| split, run: >
+                :vertical Jq {args}
+<
+            Possible modifiers:
+                |:vertical|
+                |:tab|
+                |:topleft|
+                |:botright|
+                |:leftabove|  (same as |:aboveleft|)
+                |:rightbelow| (same as |:belowright|)
+
+            Note: command modifiers must be written before the [range].
+            Example: >
+                :vertical '<,'>Jq {args}
+<
+            Add [!] to replace the current json buffer (or [range]) with the
+            output of jq. In this case the command acts like a filter. If
+            previously a trailing comma was removed, it will be put back. If
+            the jq output has less than 2048 lines, it will be reindented with
+            |v_=|. This upper limit can be changed, see |jqplay-config| below.
+
+            When [!] is added, jq always runs synchronously, internally
+            through |:range!|. Without [!], jq will run in the background
+            unless disabled through the "async" key in |b:jqplay| or
+            |g:jqplay| (see below).
+
+:JqStop [{how}]                                               *jqplay-:JqStop*
+            Stop any running jq process that was previously started with
+            ":Jq". When {how} is omitted, the job will be terminated. See
+            |job_stop()| for more details on the {how} values.
+
+==============================================================================
+CONFIGURATION                                                  *jqplay-config*
+
+b:jqplay                                                            *b:jqplay*
+g:jqplay                                                            *g:jqplay*
+
+Options are set in the buffer-local |Dictionary| b:jqplay, or alternatively in
+the global |Dictionary| g:jqplay. The following keys are supported:
+                                                                  *jqplay-exe*
+"exe" ~
+            Path to jq executable.
+            Default: value found in $PATH
+                                                                 *jqplay-opts*
+"opts" ~
+            Default options that are always passed to jq, like "--tab". The
+            arguments {args} passed to |jqplay-:Jq| in the |Command-line| are
+            appended to "opts".
+            Default: ""
+                                                                *jqplay-async*
+"async" ~
+            Specifies whether to run jq asynchronously using |job_start()|.
+            Note: this option applies only to |jqplay-:Jq| without the [!].
+            Default: 1
+                                                            *jqplay-maxindent*
+"maxindent" ~
+            Maximum number of lines up to which Vim will reindent the jq
+            output. This entry is used only when the [!] is added to
+            |jqplay-:Jq|. The output won't be reindented when the entire
+            buffer was selected, or when the jq options "--compact-output" or
+            "-c" were passed. Setting "maxindent" to zero or a negative value
+            will disable reindentation.
+            Default: 2048
+
+Note: The |buffer-variable| b:jqplay must be specified for json filetypes,
+for example, in after/ftplugin/json.vim.
+
+Examples ~
+>
+    " in vimrc
+    let g:jqplay = {
+            \ 'exe': '~/.local/bin/jq',
+            \ 'opts': '--tab',
+            \ 'async': 1
+            \ }
+
+    " alternatively, in after/ftplugin/json.vim
+    let b:jqplay = {
+            \ 'opts': '--indent 4',
+            \ 'async': 0
+            \ }
+<
+
+==============================================================================
+FAQ                                                               *jqplay-faq*
+
+How can I override buffer settings of jq-output:// buffers? ~
+
+Option 1, use |autocommands|:
+>
+    " in your vimrc or somewhere in ~/.vim/plugin/
+    augroup jq-output
+        autocmd!
+        autocmd FileType json
+            \ if bufname('%')[:11] ==# 'jq-output://' |
+            \   setlocal bufhidden=wipe               |
+            \ endif
+    augroup END
+<
+
+Option 2, use a |ftplugin| file:
+>
+    " in after/ftplugin/json.vim
+    if bufname('%')[:11] ==# 'jq-output://'
+        setlocal bufhidden=wipe
+    endif
+<
+
+ vim:tw=78:et:ft=help:norl:
