@@ -254,7 +254,7 @@ function! json#jqplay#stophow(arglead, cmdline, cursorpos) abort
 endfunction
 
 function! json#jqplay#complete(arglead, cmdline, cursorpos) abort
-    if a:arglead[0] ==# '-' || a:cmdline =~# '.*Jq\s\+$'
+    if a:arglead[0] ==# '-'
         return filter(
                 \ copy(['-a', '-C', '-c', '-e', '-f', '-h', '-j', '-L', '-M',
                 \ '-n', '-R', '-r', '-S', '-s', '--arg', '--argfile', '--argjson',
