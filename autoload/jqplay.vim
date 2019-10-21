@@ -1,6 +1,6 @@
 " ==============================================================================
 " Integration of jq (the command-line JSON processor) into Vim
-" File:         autoload/json/jqplay.vim
+" File:         autoload/jqplay.vim
 " Author:       bfrg <https://github.com/bfrg>
 " Website:      https://github.com/bfrg/vim-jqplay
 " Last Change:  Oct 21, 2019
@@ -64,7 +64,7 @@ function! s:jqcmd(exe, opts, args, file)
     return printf('%s %s %s -f %s', a:exe, a:opts, a:args, a:file)
 endfunction
 
-function! json#jqplay#scratch(mods, jq_opts) abort
+function! jqplay#scratch(mods, jq_opts) abort
     if s:jqplay_open
         return s:error('jqplay: currently only one session per Vim instance is allowed.')
     endif
@@ -95,8 +95,8 @@ function! json#jqplay#scratch(mods, jq_opts) abort
     if !empty(s:get('autocmds'))
         call s:set_autocmds()
     endif
-    execute "command! -bar -bang JqplayClose call json#jqplay#closeall(<bang>0)"
-    execute "command! -bar -bang -nargs=? -complete=customlist,json#jqplay#complete Jqrun call s:run_manually(<bang>0, <q-args>)"
+    execute "command! -bar -bang JqplayClose call jqplay#closeall(<bang>0)"
+    execute "command! -bar -bang -nargs=? -complete=customlist,jqplay#complete Jqrun call s:run_manually(<bang>0, <q-args>)"
 endfunction
 
 function! s:set_autocmds() abort
@@ -113,21 +113,21 @@ function! s:set_autocmds() abort
         execute printf('autocmd %s <buffer=%d> call s:input_changed()', events, in_buf)
 
         " Remove autocmds when filter, input or output buffer is deleted/wiped
-        execute printf('autocmd BufDelete,BufWipeout <buffer=%d> call json#jqplay#closeall(0)', filter_buf)
-        execute printf('autocmd BufDelete,BufWipeout <buffer=%d> call json#jqplay#closeall(0)', in_buf)
-        execute printf('autocmd BufDelete,BufWipeout <buffer=%d> call json#jqplay#closeall(0)', out_buf)
+        execute printf('autocmd BufDelete,BufWipeout <buffer=%d> call jqplay#closeall(0)', filter_buf)
+        execute printf('autocmd BufDelete,BufWipeout <buffer=%d> call jqplay#closeall(0)', in_buf)
+        execute printf('autocmd BufDelete,BufWipeout <buffer=%d> call jqplay#closeall(0)', out_buf)
     augroup END
 endfunction
 
-function! json#jqplay#ctx() abort
+function! jqplay#ctx() abort
     return s:jqplay_open ? s:jq_ctx : {}
 endfunction
 
-function! json#jqplay#closeall(bang) abort
+function! jqplay#closeall(bang) abort
     if !s:jqplay_open
         return
     endif
-    call json#jqplay#stop()
+    call jqplay#stop()
 
     if a:bang
         if bufexists(s:jq_ctx.filter_buf)
@@ -215,17 +215,17 @@ function! s:jq_job(jq_ctx, close_cb) abort
     endtry
 endfunction
 
-function! json#jqplay#stop(...) abort
+function! jqplay#stop(...) abort
     if exists('g:jq_job')
         return job_stop(g:jq_job, a:0 ? a:1 : 'term')
     endif
 endfunction
 
-function! json#jqplay#stophow(arglead, cmdline, cursorpos) abort
+function! jqplay#stophow(arglead, cmdline, cursorpos) abort
     return join(['term', 'hup', 'quit', 'int', 'kill'], "\n")
 endfunction
 
-function! json#jqplay#complete(arglead, cmdline, cursorpos) abort
+function! jqplay#complete(arglead, cmdline, cursorpos) abort
     if a:arglead[0] ==# '-'
         return filter(
                 \ copy(['-a', '-C', '-c', '-e', '-f', '-h', '-j', '-L', '-M',

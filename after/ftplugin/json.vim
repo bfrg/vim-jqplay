@@ -11,10 +11,10 @@ let s:cpo_save = &cpoptions
 set cpoptions&vim
 
 " Open a jq scratch buffer with the current buffer as input
-command! -buffer -nargs=? -complete=customlist,json#jqplay#complete Jqplay call json#jqplay#scratch(<q-mods>, <q-args>)
+command! -buffer -nargs=? -complete=customlist,jqplay#complete Jqplay call jqplay#scratch(<q-mods>, <q-args>)
 
 " Stop any running jq process, internally calls job_stop()
-command! -buffer -nargs=? -complete=custom,json#jqplay#stophow JqStop call json#jqplay#stop(<f-args>)
+command! -buffer -nargs=? -complete=custom,jqplay#stophow JqStop call jqplay#stop(<f-args>)
 
 let b:undo_ftplugin = get(b:, 'undo_ftplugin', 'execute') . ' | delcommand Jqplay | delcommand JqStop'
 
