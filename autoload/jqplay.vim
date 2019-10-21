@@ -196,15 +196,15 @@ endfunction
 function! s:jq_job(jq_ctx, close_cb) abort
     silent call deletebufline(a:jq_ctx.out_buf, 1, '$')
 
-    if exists('g:jq_job') && job_status(g:jq_job) ==# 'run'
-        call job_stop(g:jq_job)
+    if exists('s:job') && job_status(s:job) ==# 'run'
+        call job_stop(s:job)
     endif
 
     " https://github.com/vim/vim/issues/4688
     " E631: write_buf_line(): write failed
     " This occurs only for large files
     try
-        let g:jq_job = job_start([&shell, &shellcmdflag, a:jq_ctx.cmd], {
+        let s:job = job_start([&shell, &shellcmdflag, a:jq_ctx.cmd], {
                 \ 'in_io': 'buffer',
                 \ 'in_buf': a:jq_ctx.in_buf,
                 \ 'out_cb': {_,msg -> appendbufline(a:jq_ctx.out_buf, '$', msg)},
@@ -216,9 +216,11 @@ function! s:jq_job(jq_ctx, close_cb) abort
 endfunction
 
 function! jqplay#stop(...) abort
-    if exists('g:jq_job')
-        return job_stop(g:jq_job, a:0 ? a:1 : 'term')
-    endif
+    return exists('s:job') ? job_stop(s:job, a:0 ? a:1 : 'term') : ''
+endfunction
+
+function! jqplay#jq_job() abort
+    return exists('s:job') ? s:job : ''
 endfunction
 
 function! jqplay#stophow(arglead, cmdline, cursorpos) abort
