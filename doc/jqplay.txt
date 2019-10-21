@@ -79,7 +79,7 @@ USAGE                                                           *jqplay-usage*
             This command is available only after running |jqplay-:Jqplay|, and
             is deleted after the jqplay session is closed.
 
-:JqStop [{how}]                                               *jqplay-:JqStop*
+:Jqstop [{how}]                                               *jqplay-:Jqstop*
             Stop any running jq process that was previously started with
             |jqplay-:Jqplay| or |jqplay-:Jqrun|. When {how} is omitted, the
             job will be terminated. See |job_stop()| for more details on the

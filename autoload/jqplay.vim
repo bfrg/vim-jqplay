@@ -1,5 +1,5 @@
 " ==============================================================================
-" Integration of jq (the command-line JSON processor) into Vim
+" Run jq (the command-line JSON processor) interactively in Vim
 " File:         autoload/jqplay.vim
 " Author:       bfrg <https://github.com/bfrg>
 " Website:      https://github.com/bfrg/vim-jqplay

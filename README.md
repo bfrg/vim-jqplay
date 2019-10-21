@@ -44,7 +44,7 @@ a bang will stop the session and also delete both buffers. You can think of
 `:JqplayClose!` as _I am done, close everything!_
 
 `jq` processes previously started with `:Jqplay` or `:Jqrun` can be stopped at
-any time with `:JqStop`.
+any time with `:Jqstop`.
 
 
 ## Configuration
