@@ -1,69 +1,95 @@
 # vim-jqplay
 
-1. Run [jq][jq] from Vim's `Command-line` on a json buffer and display the
-   output in a new split window, or apply it to the input buffer directly, hence
-   acting as a filter.
-
-2. Alternatively, open a `jq` scratch buffer and apply it interactively on the
-   input buffer while both the `jq` filter buffer or the `json` input buffer are
-   being modified, similar to [jqplay.org][jqplay].
+Run [jq][jq] on a json buffer, and interactively update the output window
+whenever the input buffer or the jq filter buffer are modified, similar to
+[jqplay.org][jqplay].
 
 
 ## Usage
 
-### Run jq from Vim's Command-line mode
+#### Run jq automatically whenever input or filter buffer are modified
 
-Run `:Jq {args}` on the current json buffer, where `{args}` are any `jq`
-command-line arguments as you would write them in the shell. The output is
-displayed in a new `split` window.
+Running `:Jqplay {args}` on the current json buffer opens two new windows:
+1. The first window contains a `jq` scratch buffer (prefixed with
+   `jq-filter://`) that is applied interactively to the current json buffer.
+2. The second window displays the `jq` output (prefixed with `jq-output://`).
 
-Run `:Jq! {args}` with a bang to replace the current json buffer with the output
-of `jq`.
+`{args}` can be any `jq` command-line arguments as you would write them in the
+shell (except for the `-f` and `--from-file` options, and the filter).
 
-Both commands accept a `[range]`. In this case only the selected lines are
-passed to `jq` as input. Trailing commas in the last line of the `[range]` are
-removed automatically to avoid `jq` parsing errors, and for `:Jq!` put back
-afterwards.
+Jq will run automatically whenever the json input buffer or the `jq` filter
+buffer are modified. By default `jq` is invoked when the `InsertLeave` or
+`TextChanged` events are triggered. See `:help jqplay-config` or
+[configuration][#Configuration] below on how to change the list of events.
 
-### Run jq interactively whenever input or filter buffer are modified
 
-Run `:Jqplay {args}` on the current json buffer to open a new `jq` scratch
-buffer and apply the edited filter interactively to the current buffer. `{args}`
-can be any `jq` command-line arguments (except for the `-f` and `--from-file`
-options).
+#### Run jq manually on demand
 
-The output is displayed in a separate `split` window similar to the `:Jq`
-command. Jq runs interactively whenever the json input buffer or the `jq`
-scratch buffer are modified. By default `jq` is invoked when the `InsertLeave`
-or `TextChanged` event are triggered. See `:help jqplay-config` on how to change
-these events.
+Use `:Jqrun {args}` at any time to invoke `jq` manually with the `jq` arguments
+`{args}` and the current `jq-filter://`. This will temporarily override the `jq`
+options previously set with `:Jqplay {args}`. Add a `!` to `:Jqrun!` to
+permanently override the options for the `jq` buffer.
 
-Use `:Jqrun {args}` at any time to invoke `jq` manually with the `jq` options
-`{args}`. This will temporarily override the `jq` options previously set with
-`:Jqplay {args}`. Adding a `!` to `:Jqrun` will permanently override the options
-of the `jq` scratch buffer.
+`:Jqrun` is useful to quickly run the same `jq` script with different set of `jq`
+arguments.
 
-`:Jqrun` is useful to quickly run the same jq-filter with different set of `jq`
-options.
+Alternatively, if you don't want to run `jq` interactively on every buffer
+change, disable all autocommands and use `:Jqrun` instead.
 
-Alternatively, if you don't like to run `jq` interactively on every buffer
-change, disable all autocommands in the `jqplay` variable and use `:Jqrun`
-instead.
+#### Close jqplay or stop a jq process
 
 Running `:JqplayClose` will stop the interactive session. The `jq` scratch
-buffer and the jq-output buffer will be kept open. Running `:JqplayClose!` with
-a bang will stop the session and delete both buffers. You can think of
+buffer and the output buffer will be kept open. Running `:JqplayClose!` with
+a bang will stop the session and also delete both buffers. You can think of
 `:JqplayClose!` as _I am done, close everything!_
 
-`jq` processes previously started with `:Jq` or `:Jqplay` can be stopped at any
-time with `:JqStop`.
+`jq` processes previously started with `:Jqplay` or `:Jqrun` can be stopped at
+any time with `:JqStop`.
 
 
 ## Configuration
 
-Options like the path to the `jq` executable can be set in either the
-buffer-variable `b:jqplay`, or the global-variable `g:jqplay`. See `:help
-jqplay-config` for more details.
+Options are set in either the buffer-local dictionary `b:jqplay`, or the
+global dictionary `g:jqplay`.
+
+**Note:** The buffer-variable `b:jqplay` needs to be specified for `json`
+filetypes, for example, in `after/ftplugin/json.vim`
+
+The following entries can be set:
+
+| Key        | Description                 | Default                          |
+| ---------- | --------------------------- | -------------------------------- |
+| `exe`      | Path to `jq` executable     | value found in `$PATH`           |
+| `opts`     | Default `jq` arguments      | ""                               |
+| `autocmds` | Events when `jq` is invoked | `["InsertLeave", "TextChanged"]` |
+
+If you don't want to run `jq` interactively on every buffer change, set
+`autocmds` to an empty list and run `:Jqrun` manually.
+
+See `:help jqplay-config` for more details.
+
+**Example 1:**
+
+Use the local `jq` executable and tabs for indentation. Invoke `jq` whenever
+insert mode is left, text is changed in normal mode, or when user doesn't press
+a key in insert mode for the time specified with `updatetime`:
+```vim
+" in vimrc
+let g:jqplay = {
+    \ 'exe': '~/.local/bin/jq',
+    \ 'opts': '--tab',
+    \ 'autocmds': ['TextChanged', 'CursorHoldI', 'InsertLeave']
+    \ }
+```
+
+**Example 2:**
+
+Use tabs for indentation, do not run `jq` automatically on buffer change.
+Instead invoke `jq` manually with `:Jqrun`:
+```vim
+" in after/ftplugin/json.vim
+let b:jqplay = { 'opts': '--tab', 'autocmds': [] }
+```
 
 
 ## Installation

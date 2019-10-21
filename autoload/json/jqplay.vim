@@ -16,8 +16,6 @@ let s:jqplay_open = 0
 let s:defaults = {
         \ 'exe': exepath('jq'),
         \ 'opts': '',
-        \ 'async': 1,
-        \ 'maxindent': 2048,
         \ 'autocmds': ['InsertLeave', 'TextChanged']
         \ }
 
@@ -31,34 +29,7 @@ function! s:error(msg) abort
     return 0
 endfunction
 
-function! s:json_scratch(bufname, mods) abort
-    let out_buf = bufnr(a:bufname, 1)
-
-    " New buffers returned by bufnr({expr}, 1) are unloaded
-    if !bufloaded(out_buf)
-        " Setting the filetype at last will allow users to override the other
-        " buffer-local options in after/ftplugin/json.vim, or using a FileType
-        " autocommand
-        call setbufvar(out_buf, '&swapfile', 0)
-        call setbufvar(out_buf, '&buflisted', 1)
-        call setbufvar(out_buf, '&buftype', 'nofile')
-        call setbufvar(out_buf, '&bufhidden', 'hide')
-        call setbufvar(out_buf, '&filetype', 'json')
-    endif
-
-    " Make sure buffer is visible
-    if bufwinnr(out_buf) == -1
-        silent execute a:mods 'keepalt sbuffer' out_buf
-        wincmd p
-    endif
-
-    " Issue: https://github.com/vim/vim/issues/4745
-    silent call deletebufline(out_buf, 1, '$')
-
-    return out_buf
-endfunction
-
-function! s:jq_scratch(bufname) abort
+function! s:new_scratch(bufname, filetype, mods, ...) abort
     let bufnr = bufnr(a:bufname, 1)
 
     " New buffers returned by bufnr({expr}, 1) are unloaded
@@ -67,19 +38,24 @@ function! s:jq_scratch(bufname) abort
         call setbufvar(bufnr, '&buflisted', 1)
         call setbufvar(bufnr, '&buftype', 'nofile')
         call setbufvar(bufnr, '&bufhidden', 'hide')
-        call setbufvar(bufnr, '&filetype', 'jq')
+        call setbufvar(bufnr, '&filetype', a:filetype)
     endif
 
     " Make sure buffer is visible
     if bufwinnr(bufnr) == -1
-        silent execute 'botright keepalt sbuffer' bufnr
-        resize 10
+        silent execute a:mods 'keepalt sbuffer' bufnr
+        if a:0
+            execute 'resize' a:1
+        endif
         wincmd p
     endif
 
-    " Filetype will be overridden when filename ends with .json, like
-    " jq-filter:///path/to/inputfile.json, therefore call it again
-    call setbufvar(bufnr, '&filetype', 'jq')
+    " https://github.com/vim/vim/issues/4745
+    silent call deletebufline(bufnr, 1, '$')
+
+    " Filetype will be overridden when buffer loaded and bufname ends with
+    " .json, like jq-filter:///path/to/inputfile.json, therefore call it again
+    call setbufvar(bufnr, '&filetype', a:filetype)
 
     return bufnr
 endfunction
@@ -95,9 +71,9 @@ function! json#jqplay#scratch(mods, jq_opts) abort
 
     let in_buf = bufnr('%')
     let out_name = 'jq-output://' . expand('%')
-    let out_buf = s:json_scratch(out_name, a:mods)
+    let out_buf = s:new_scratch(out_name, 'json', a:mods)
     let jqfilter_name = 'jq-filter://' . expand('%')
-    let jqfilter_buf = s:jq_scratch(jqfilter_name)
+    let jqfilter_buf = s:new_scratch(jqfilter_name, 'jq', 'botright', 10)
     let jqfilter_file = tempname()
     let jq_cmd = s:jqcmd(s:get('exe'), s:get('opts'), a:jq_opts, jqfilter_file)
 
@@ -237,44 +213,6 @@ function! s:jq_job(jq_ctx, close_cb) abort
                 \ })
     catch /^Vim\%((\a\+)\)\=:E631:/
     endtry
-endfunction
-
-function! json#jqplay#run(mods, bang, start_line, end_line, jq_filter) abort
-    if a:jq_filter =~# '-h\>\|--help\>'
-        echo system(s:get('exe') .. ' --help')
-        return
-    endif
-
-    let jq_cmd = printf('%s %s %s', s:get('exe'), s:get('opts'), a:jq_filter)
-
-    if a:bang
-        let b:jqinfo = {
-                \ 'start_line': a:start_line,
-                \ 'end_line': a:end_line,
-                \ 'cmd': jq_cmd
-                \ }
-        let b:undo_ftplugin = get(b:, 'undo_ftplugin', 'execute') . '| unlet! b:jqinfo'
-        call json#jqplay#bang#filter(a:start_line, a:end_line, s:get('maxindent'), jq_cmd)
-    else
-        let in_buf = bufnr('%')
-        let out_name = 'jq-output://' . expand('%')
-        let out_buf = s:json_scratch(out_name, a:mods)
-
-        call setbufvar(out_buf, 'jqinfo', {
-                \ 'start_line': a:start_line,
-                \ 'end_line': a:end_line,
-                \ 'in_buf':  in_buf,
-                \ 'cmd': jq_cmd
-                \ })
-        let undo = getbufvar(out_buf, 'undo_ftplugin', 'execute') . '| unlet! b:jqinfo'
-        call setbufvar(out_buf, 'undo_ftplugin', undo)
-
-        if s:get('async')
-            call json#jqplay#job#filter(in_buf, a:start_line, a:end_line, out_buf, jq_cmd)
-        else
-            call json#jqplay#system#filter(in_buf, a:start_line, a:end_line, out_buf, jq_cmd)
-        endif
-    endif
 endfunction
 
 function! json#jqplay#stop(...) abort

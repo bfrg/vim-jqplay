@@ -1,4 +1,4 @@
-*jqplay.txt*  Integration of jq (the command-line JSON processor) into Vim
+*jqplay.txt*  Run jq (the command-line JSON processor) interactively in Vim
 
 Author:     bfrg <http://github.com/bfrg>
 Website:    https://github.com/bfrg/vim-jqplay
@@ -6,117 +6,84 @@ License:    Same terms as Vim itself (see |license|)
 
 
 ==============================================================================
-INTRODUCTION                                                    *jqplay-intro*
+INTRODUCTION                                           *jqplay* *jqplay-intro*
 
-1. Run jq (the command-line JSON processor) from Vim's |Command-line| on a
-   json buffer, and display the output in a new |:split| window, or replace
-   the input buffer with jq's output directly, hence acting as a filter.
-
-2. Alternatively, open a jq scratch buffer and apply it interactively on the
-   input buffer while both the jq filter buffer or the json input buffer are
-   being modified, similar to https://jqplay.org.
+Run jq (https://github.com/stedolan/jq) on a json buffer, and interactively
+update the output window whenever the input buffer or the jq filter
+buffer are modified, similar to https://jqplay.org.
 
 ==============================================================================
 USAGE                                                           *jqplay-usage*
 
-:[range]Jq[!] {args}                                              *jqplay-:Jq*
-            Run jq with the arguments {args} and the current json buffer as
-            input.
+:Jqplay {args}                                                *jqplay-:Jqplay*
+            Open a new jq scratch buffer and apply the entered jq filter to
+            the current json buffer. The output is displayed in a new |:split|
+            window, and updated interactively when both the jq buffer or the
+            input buffer are modified.
 
             {args} can be any jq command-line arguments as you would write
-            them in the shell.
+            them in the shell, except for the "-f" or "--from-file" options
+            since the jq scratch buffer is already passed to jq through this
+            option. Jq is always invoked with the options specified in {args}.
+            These can be changed at any time through |jqplay-:Jqrun| (see
+            below).
 
-            If a [range] is specified, only the selected lines are passed to
-            jq as input.
-
-            Note: trailing commas in the last line of the [range] are removed
-            in order to avoid jq parsing errors.
-
-            By default the output is displayed in a new |:split| window. The
-            name of the output buffer is prefixed with "jq-output://" to
+            The name of the output buffer is prefixed with "jq-output://" to
             distinguish it from the input buffer.
 
             The command can be preceded by a command modifier. For example, to
             open the output buffer in a new |:vertical| split, run: >
-                :vertical Jq {args}
+                :vertical Jqplay {args}
 <
             Possible modifiers:
                 |:vertical|
-                |:tab|
                 |:topleft|
                 |:botright|
                 |:leftabove|  (same as |:aboveleft|)
                 |:rightbelow| (same as |:belowright|)
 
-            Note: command modifiers must be written before the [range].
-            Example: >
-                :vertical '<,'>Jq {args}
-<
-            Add [!] to replace the current json buffer (or [range]) with the
-            output of jq. In this case the command acts like a filter. If
-            previously a trailing comma was removed, it will be put back. If
-            the jq output has less than 2048 lines, it will be reindented with
-            |v_=|. This upper limit can be changed, see |jqplay-config| below.
-
-            When [!] is added, jq always runs synchronously, internally
-            through |:range!|. Without [!], jq will run in the background
-            unless disabled through the "async" key in |b:jqplay| or
-            |g:jqplay| (see below).
-
-:Jqplay {args}                                                *jqplay-:Jqplay*
-            Open a new jq scratch buffer and apply the edited jq filter
-            interactively to the current json buffer while both the jq buffer
-            or the input buffer are being modified. The output is displayed in
-            a separate |:split| window similar to the |jqplay-:Jq| command
-            without the [!].
-
-            By default jq is run whenever the |InsertLeave| or |TextChanged|
-            events have been triggered. The list of autocommands can be
-            changed with the "autocmds" key, see |jqplay-autocmds| below.
-
-            {args} can be any jq command-line arguments, except for the "-f"
-            or "--from-file" options since the buffer content of the jq
-            scratch buffer is already passed to jq through this option. Jq
-            will always be invoked with the options set in {args}. These can
-            be changed at any time with |jqplay-:Jqrun| (see below).
+            By default jq is invoked automatically when the |InsertLeave| or
+            the |TextChanged| event is triggered. The list of autocommands can
+            be changed with the "autocmds" option, see |jqplay-autocmds|
+            below.
 
             Note: currently no [range] can be specified since there is no
             simple way to update the start and end line when lines are being
-            added to or deleted from the json input buffer.
+            added to or deleted in the json input buffer.
             TODO: check |listener_add()|.
 
 :JqplayClose[!]                                          *jqplay-:JqplayClose*
             Close the interactive jqplay session. This will delete all
-            autocommands which are re-running jq on buffer change.
+            autocommands that are invoking jq on buffer change.
 
             By default the jq scratch buffer and the output buffer are kept
             open. Add [!] to also |:bdelete| both buffers. Think of
-            "JqplayClose!" as "I am done, close everything".
+            ":JqplayClose!" as "I am done, close everything".
 
             The command is available only after running ":Jqplay", and is
             deleted after the first invocation.
 
 :Jqrun[!] [{args}]                                             *jqplay-:Jqrun*
             Invoke jq manually with the jq command-line arguments {args}. This
-            will temporarily override the jq-options previously set with
-            ":Jqplay {args}". Adding a [!] will permanently set the jq-options
-            of the jq-scratch buffer to {args}.
+            will temporarily override the jq options previously set with
+            ":Jqplay {args}". Adding a [!] will permanently set the jq options
+            of the current jq scratch buffer to {args}.
 
-            This command is useful to quickly run the same jq-filter with
+            This command is useful to quickly run the same jq filter with
             different set of jq arguments.
 
             Alternatively, if you don't like to run jq interactively on every
-            buffer change, disable all |jqplay-autocmds| and run ":Jqrun"
-            instead.
+            buffer change, disable all |jqplay-autocmds| and run ":Jqrun" on
+            demand.
 
             This command is available only after running |jqplay-:Jqplay|, and
             is deleted after the jqplay session is closed.
 
 :JqStop [{how}]                                               *jqplay-:JqStop*
             Stop any running jq process that was previously started with
-            |jqplay-:Jq| or |jqplay-:Jqplay|. When {how} is omitted, the job will
-            be terminated. See |job_stop()| for more details on the {how}
-            values.
+            |jqplay-:Jqplay| or |jqplay-:Jqrun|. When {how} is omitted, the
+            job will be terminated. See |job_stop()| for more details on the
+            {how} values.
 
 ==============================================================================
 CONFIGURATION                                                  *jqplay-config*
@@ -133,53 +100,42 @@ the global |Dictionary| g:jqplay. The following keys are supported:
                                                                  *jqplay-opts*
 "opts" ~
             Default options that are always passed to jq, like "--tab". The
-            arguments {args} passed to |jqplay-:Jq| in the |Command-line| are
-            appended to "opts".
+            arguments {args} passed to |jqplay-:Jqplay| are appended to
+            "opts".
             Default: ""
-                                                                *jqplay-async*
-"async" ~
-            Specifies whether to run jq asynchronously using |job_start()|.
-            Note: this option applies only to |jqplay-:Jq| without the [!].
-            Default: 1
-                                                            *jqplay-maxindent*
-"maxindent" ~
-            Maximum number of lines up to which Vim will reindent the jq
-            output. This entry is used only when the [!] is added to
-            |jqplay-:Jq|. The output won't be reindented when the entire
-            buffer was selected, or when the jq options "--compact-output" or
-            "-c" were passed. Setting "maxindent" to zero or a negative value
-            will disable reindentation.
-            Default: 2048
                                                              *jqplay-autocmds*
 "autocmds" ~
             List of |autocmd-events| used for the |jqplay-:Jqplay| command
-            that specifies when to re-run jq. The plugin will set buffer-local
-            autocommands for both the input json buffer and the jq scratch
-            buffer. If you don't want to call jq interactively on every buffer
-            change, set this entry to an empty list and run |jqplay-:Jqrun| on
-            demand.
-            Default: |InsertLeave| and |TextChanged|
+            that specifies when to invoke jq. The autocommands are set for
+            both the input json buffer and the jq scratch buffer. If you don't
+            want to run jq interactively on every buffer change, set this
+            entry to an empty list and run |jqplay-:Jqrun| on demand.
+            Default: ["|InsertLeave|", "|TextChanged|"]
 
 Note: The |buffer-variable| b:jqplay must be specified for json filetypes,
 for example, in after/ftplugin/json.vim.
 
+                                                      *jqplay-config-examples*
 Examples ~
->
-    " in vimrc
-    let g:jqplay = {
-            \ 'exe': '~/.local/bin/jq',
-            \ 'opts': '--tab',
-            \ 'async': 1,
-            \ 'autocmds': ['TextChanged', 'CursorHoldI', 'InsertLeave'],
-            \ }
 
-    " alternatively, in after/ftplugin/json.vim
-    let b:jqplay = {
-            \ 'opts': '--indent 4',
-            \ 'async': 0,
-            \ 'autocmds': ['TextChanged', 'CursorHoldI', 'InsertLeave'],
-            \ }
+    1. Use the local jq executable and tabs for indentation. Invoke jq
+       whenever insert mode is left, text is changed in normal mode, or when
+       user doesn't press a key in insert mode for the time specified with
+       |updatetime|: >
+
+       " in vimrc
+       let g:jqplay = {
+               \ 'exe': '~/.local/bin/jq',
+               \ 'opts': '--tab',
+               \ 'autocmds': ['TextChanged', 'CursorHoldI', 'InsertLeave']
+               \ }
 <
+    2. Use tabs for indentation, don't run jq automatically on buffer change.
+       Instead invoke jq manually with |jqplay-:Jqrun|: >
+
+       " in after/ftplugin/json.vim
+       let b:jqplay = { 'opts': '--tab', 'autocmds': [] }
+
 ==============================================================================
 FAQ                                                               *jqplay-faq*
 
