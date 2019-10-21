@@ -68,7 +68,10 @@ If you don't want to run `jq` interactively on every buffer change, set
 
 See `:help jqplay-config` for more details.
 
-**Example 1:**
+
+## Examples
+
+#### Example 1: `g:jqplay`
 
 Use the local `jq` executable and tabs for indentation. Invoke `jq` whenever
 insert mode is left, text is changed in normal mode, or when user doesn't press
@@ -82,7 +85,7 @@ let g:jqplay = {
     \ }
 ```
 
-**Example 2:**
+#### Example 2: `b:jqplay`
 
 Use tabs for indentation, do not run `jq` automatically on buffer change.
 Instead invoke `jq` manually with `:Jqrun`:
@@ -90,6 +93,19 @@ Instead invoke `jq` manually with `:Jqrun`:
 " in after/ftplugin/json.vim
 let b:jqplay = { 'opts': '--tab', 'autocmds': [] }
 ```
+
+#### Example 3: `:JqplayScratch`
+
+`:Jqplay` is a buffer-local command available only in `json` buffers. If you
+want to start a jqplay session from anywhere, add the following to your `vimrc`:
+
+```vim
+command! -nargs=? -complete=customlist,jqplay#complete JqplayScratch enew |
+        \ setlocal buflisted buftype=nofile bufhidden=hide noswapfile filetype=json |
+        \ <mods> Jqplay <args>
+```
+You can precede `:JqplayScratch` with a command modifier. For example, `:vert
+JqplayScratch {args}` opens the `jq-output://` buffer in a new vertical split.
 
 
 ## Installation
