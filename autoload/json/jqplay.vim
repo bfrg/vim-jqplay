@@ -10,6 +10,9 @@
 let s:save_cpo = &cpoptions
 set cpoptions&vim
 
+" Flag that indicates whether a jqplay session is running
+let s:jqplay_open = 0
+
 let s:defaults = {
         \ 'exe': exepath('jq'),
         \ 'opts': '',
@@ -80,9 +83,6 @@ function! s:jq_scratch(bufname) abort
 
     return bufnr
 endfunction
-
-" Flag that indicates whether a jqplay session is running
-let s:jqplay_open = 0
 
 function! json#jqplay#scratch(mods, jq_opts) abort
     if s:jqplay_open
