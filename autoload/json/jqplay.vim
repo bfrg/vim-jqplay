@@ -84,6 +84,10 @@ function! s:jq_scratch(bufname) abort
     return bufnr
 endfunction
 
+function! s:jqcmd(exe, opts, args, file)
+    return printf('%s %s %s -f %s', a:exe, a:opts, a:args, a:file)
+endfunction
+
 function! json#jqplay#scratch(mods, jq_opts) abort
     if s:jqplay_open
         return s:error('jqplay: currently only one session per Vim instance is allowed.')
@@ -95,13 +99,7 @@ function! json#jqplay#scratch(mods, jq_opts) abort
     let jqfilter_name = 'jq-filter://' . expand('%')
     let jqfilter_buf = s:jq_scratch(jqfilter_name)
     let jqfilter_file = tempname()
-
-    let jq_cmd = printf('%s %s %s -f %s',
-            \ s:get('exe'),
-            \ s:get('opts'),
-            \ a:jq_opts,
-            \ jqfilter_file
-            \ )
+    let jq_cmd = s:jqcmd(s:get('exe'), s:get('opts'), a:jq_opts, jqfilter_file)
 
     let s:jq_ctx = {
             \ 'in_buf': in_buf,
@@ -122,7 +120,7 @@ function! json#jqplay#scratch(mods, jq_opts) abort
         call s:set_autocmds()
     endif
     execute "command! -bar -bang JqplayClose call json#jqplay#closeall(<bang>0)"
-    execute "command! -bar Jqrun call s:run_manually()"
+    execute "command! -bar -bang -nargs=? -complete=customlist,json#jqplay#complete Jqrun call s:run_manually(<bang>0, <q-args>)"
 endfunction
 
 function! s:set_autocmds() abort
@@ -172,19 +170,23 @@ function! json#jqplay#closeall(bang) abort
     echohl WarningMsg | echomsg 'jqplay session closed' | echohl None
 endfunction
 
-function! s:run_manually() abort
+function! s:run_manually(bang, args) abort
     let in_buf = s:jq_ctx.in_buf
     let filter_buf = s:jq_ctx.filter_buf
-    let in_tick = getbufvar(in_buf, 'jq_changedtick')
     let filter_tick = getbufvar(filter_buf, 'jq_changedtick')
-    if in_tick == getbufvar(in_buf, 'changedtick')
-            \ && filter_tick == getbufvar(filter_buf, 'changedtick')
-        return
-    endif
+
     if filter_tick != getbufvar(filter_buf, 'changedtick')
         call writefile(getbufline(filter_buf, 1, '$'), s:jq_ctx.filter_file)
     endif
-    call s:jq_job(function('s:close_cb_2', [in_buf, filter_buf]))
+
+    let jq_ctx = copy(s:jq_ctx)
+    let jq_ctx.cmd = s:jqcmd(s:get('exe'), s:get('opts'), a:args, s:jq_ctx.filter_file)
+    if a:bang
+        unlockvar s:jq_ctx
+        let s:jq_ctx = jq_ctx
+        lockvar s:jq_ctx
+    endif
+    call s:jq_job(jq_ctx, function('s:close_cb_2', [in_buf, filter_buf]))
 endfunction
 
 function! s:filter_changed() abort
@@ -193,7 +195,7 @@ function! s:filter_changed() abort
         return
     endif
     call writefile(getbufline(filter_buf, 1, '$'), s:jq_ctx.filter_file)
-    call s:jq_job(function('s:close_cb', [filter_buf]))
+    call s:jq_job(s:jq_ctx, function('s:close_cb', [filter_buf]))
 endfunction
 
 function! s:input_changed() abort
@@ -201,7 +203,7 @@ function! s:input_changed() abort
     if getbufvar(in_buf, 'jq_changedtick') == getbufvar(in_buf, 'changedtick')
         return
     endif
-    call s:jq_job(function('s:close_cb', [in_buf]))
+    call s:jq_job(s:jq_ctx, function('s:close_cb', [in_buf]))
 endfunction
 
 function! s:close_cb(buf, channel) abort
@@ -215,8 +217,8 @@ function! s:close_cb_2(buf1, buf2, channel) abort
     call setbufvar(a:buf2, 'jq_changedtick', getbufvar(a:buf2, 'changedtick'))
 endfunction
 
-function! s:jq_job(close_cb) abort
-    silent call deletebufline(s:jq_ctx.out_buf, 1, '$')
+function! s:jq_job(jq_ctx, close_cb) abort
+    silent call deletebufline(a:jq_ctx.out_buf, 1, '$')
 
     if exists('g:jq_job') && job_status(g:jq_job) ==# 'run'
         call job_stop(g:jq_job)
@@ -226,11 +228,11 @@ function! s:jq_job(close_cb) abort
     " E631: write_buf_line(): write failed
     " This occurs only for large files
     try
-        let g:jq_job = job_start([&shell, &shellcmdflag, s:jq_ctx.cmd], {
+        let g:jq_job = job_start([&shell, &shellcmdflag, a:jq_ctx.cmd], {
                 \ 'in_io': 'buffer',
-                \ 'in_buf': s:jq_ctx.in_buf,
-                \ 'out_cb': {_,msg -> appendbufline(s:jq_ctx.out_buf, '$', msg)},
-                \ 'err_cb': {_,msg -> appendbufline(s:jq_ctx.out_buf, '$', '// ' . msg)},
+                \ 'in_buf': a:jq_ctx.in_buf,
+                \ 'out_cb': {_,msg -> appendbufline(a:jq_ctx.out_buf, '$', msg)},
+                \ 'err_cb': {_,msg -> appendbufline(a:jq_ctx.out_buf, '$', '// ' . msg)},
                 \ 'close_cb': a:close_cb
                 \ })
     catch /^Vim\%((\a\+)\)\=:E631:/

@@ -33,16 +33,27 @@ can be any `jq` command-line arguments (except for the `-f` and `--from-file`
 options).
 
 The output is displayed in a separate `split` window similar to the `:Jq`
-command. Jq runs interactively while both the json input buffer or the `jq`
-scratch buffer are being modified, by default whenever the `InsertLeave` or
-`TextChanged` event are triggered. See `:help jqplay-config` on how to change
-the `autocmds`.
+command. Jq runs interactively whenever the json input buffer or the `jq`
+scratch buffer are modified. By default `jq` is invoked when the `InsertLeave`
+or `TextChanged` event are triggered. See `:help jqplay-config` on how to change
+these events.
 
-Run `:Jqrun` to invoke `jq` manually at any time.
+Use `:Jqrun {args}` at any time to invoke `jq` manually with the `jq` options
+`{args}`. This will temporarily override the `jq` options previously set with
+`:Jqplay {args}`. Adding a `!` to `:Jqrun` will permanently override the options
+of the `jq` scratch buffer.
 
-Running `:JqplayClose` will remove the autocommands and keep the `jq` scratch
-buffer and the jq-output buffer open. Running `:JqplayClose!` with a bang will
-also delete both buffers.
+`:Jqrun` is useful to quickly run the same jq-filter with different set of `jq`
+options.
+
+Alternatively, if you don't like to run `jq` interactively on every buffer
+change, disable all autocommands in the `jqplay` variable and use `:Jqrun`
+instead.
+
+Running `:JqplayClose` will stop the interactive session. The `jq` scratch
+buffer and the jq-output buffer will be kept open. Running `:JqplayClose!` with
+a bang will stop the session and delete both buffers. You can think of
+`:JqplayClose!` as _I am done, close everything!_
 
 `jq` processes previously started with `:Jq` or `:Jqplay` can be stopped at any
 time with `:JqStop`.

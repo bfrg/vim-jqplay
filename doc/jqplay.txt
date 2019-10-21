@@ -76,7 +76,9 @@ USAGE                                                           *jqplay-usage*
 
             {args} can be any jq command-line arguments, except for the "-f"
             or "--from-file" options since the buffer content of the jq
-            scratch buffer is already passed to jq through this option.
+            scratch buffer is already passed to jq through this option. Jq
+            will always be invoked with the options set in {args}. These can
+            be changed at any time with |jqplay-:Jqrun| (see below).
 
             Note: currently no [range] can be specified since there is no
             simple way to update the start and end line when lines are being
@@ -94,12 +96,21 @@ USAGE                                                           *jqplay-usage*
             The command is available only after running ":Jqplay", and is
             deleted after the first invocation.
 
-:Jqrun                                                         *jqplay-:Jqrun*
-            Invoke jq manually. This command is useful when the
-            |jqplay-autocmds| entry has been set to an empty list.
+:Jqrun[!] [{args}]                                             *jqplay-:Jqrun*
+            Invoke jq manually with the jq command-line arguments {args}. This
+            will temporarily override the jq-options previously set with
+            ":Jqplay {args}". Adding a [!] will permanently set the jq-options
+            of the jq-scratch buffer to {args}.
 
-            This command is available only after running ":Jqplay", and is
-            deleted after ":JqplayClose".
+            This command is useful to quickly run the same jq-filter with
+            different set of jq arguments.
+
+            Alternatively, if you don't like to run jq interactively on every
+            buffer change, disable all |jqplay-autocmds| and run ":Jqrun"
+            instead.
+
+            This command is available only after running |jqplay-:Jqplay|, and
+            is deleted after the jqplay session is closed.
 
 :JqStop [{how}]                                               *jqplay-:JqStop*
             Stop any running jq process that was previously started with
