@@ -32,31 +32,17 @@ endfunction
 function! s:new_scratch(bufname, filetype, mods, ...) abort
     let bufnr = bufnr(a:bufname, 1)
 
-    " New buffers returned by bufnr({expr}, 1) are unloaded
-    if !bufloaded(bufnr)
-        call setbufvar(bufnr, '&swapfile', 0)
-        call setbufvar(bufnr, '&buflisted', 1)
-        call setbufvar(bufnr, '&buftype', 'nofile')
-        call setbufvar(bufnr, '&bufhidden', 'hide')
-        call setbufvar(bufnr, '&filetype', a:filetype)
-    endif
-
-    " Make sure buffer is visible
     if bufwinnr(bufnr) == -1
         silent execute a:mods 'keepalt sbuffer' bufnr
+        setlocal noswapfile buflisted buftype=nofile bufhidden=hide
+        call setbufvar(bufnr, '&filetype', a:filetype)
         if a:0
             execute 'resize' a:1
         endif
         wincmd p
     endif
 
-    " https://github.com/vim/vim/issues/4745
     silent call deletebufline(bufnr, 1, '$')
-
-    " Filetype will be overridden when bufname ends with .json, like
-    " jq-filter:///path/to/inputfile.json, therefore call it again
-    call setbufvar(bufnr, '&filetype', a:filetype)
-
     return bufnr
 endfunction
 
