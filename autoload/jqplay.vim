@@ -86,37 +86,27 @@ function! jqplay#scratch(mods, jq_opts) abort
             \ }
 
     lockvar s:jq_ctx
-    let s:jqplay_open = 1
 
     " FIXME remove buffer-local variables when jqplay session is closed
     call setbufvar(in_buf, 'jq_changedtick', getbufvar(in_buf, 'changedtick'))
     call setbufvar(jqfilter_buf, 'jq_changedtick', getbufvar(jqfilter_buf, 'changedtick'))
 
-    if !empty(s:get('autocmds'))
-        call s:set_autocmds()
-    endif
-    execute 'command! -bar -bang JqplayClose call jqplay#close(<bang>0)'
-    execute 'command! -bar -bang -nargs=? -complete=customlist,jqplay#complete Jqrun call s:run_manually(<bang>0, <q-args>)'
-endfunction
-
-function! s:set_autocmds() abort
-    let events = join(s:get('autocmds'), ',')
-    let filter_buf = s:jq_ctx.filter_buf
-    let in_buf = s:jq_ctx.in_buf
-    let out_buf = s:jq_ctx.out_buf
-
     augroup jqplay
         autocmd!
-
-        " Run jq when filter or input buffer is modified
-        execute printf('autocmd %s <buffer=%d> call s:filter_changed()', events, filter_buf)
-        execute printf('autocmd %s <buffer=%d> call s:input_changed()', events, in_buf)
-
-        " Remove autocmds when filter, input or output buffer is deleted/wiped
-        execute printf('autocmd BufDelete,BufWipeout <buffer=%d> call jqplay#close(0)', filter_buf)
         execute printf('autocmd BufDelete,BufWipeout <buffer=%d> call jqplay#close(0)', in_buf)
         execute printf('autocmd BufDelete,BufWipeout <buffer=%d> call jqplay#close(0)', out_buf)
+        execute printf('autocmd BufDelete,BufWipeout <buffer=%d> call jqplay#close(0)', jqfilter_buf)
     augroup END
+
+    if !empty(s:get('autocmds'))
+        let events = join(s:get('autocmds'), ',')
+        execute printf('autocmd jqplay %s <buffer> call s:input_changed()', events)
+        execute printf('autocmd jqplay %s <buffer=%d> call s:filter_changed()', events, jqfilter_buf)
+    endif
+
+    execute 'command! -bar -bang JqplayClose call jqplay#close(<bang>0)'
+    execute 'command! -bar -bang -nargs=? -complete=customlist,jqplay#complete Jqrun call s:run_manually(<bang>0, <q-args>)'
+    let s:jqplay_open = 1
 endfunction
 
 function! jqplay#ctx() abort
@@ -130,21 +120,15 @@ function! jqplay#close(bang) abort
     call jqplay#stop()
 
     if a:bang
-        if bufexists(s:jq_ctx.filter_buf)
-            noautocmd execute 'bdelete' s:jq_ctx.filter_buf
-        endif
-        if bufexists(s:jq_ctx.out_buf)
-            noautocmd execute 'bdelete' s:jq_ctx.out_buf
-        endif
+        noautocmd execute 'bdelete' s:jq_ctx.filter_buf
+        noautocmd execute 'bdelete' s:jq_ctx.out_buf
     endif
 
     unlockvar s:jq_ctx
-    let s:jqplay_open = 0
-    if exists('#jqplay')
-        autocmd! jqplay
-    endif
+    autocmd! jqplay
     delcommand JqplayClose
     delcommand Jqrun
+    let s:jqplay_open = 0
     echohl WarningMsg | echomsg 'jqplay session closed' | echohl None
 endfunction
 
