@@ -64,7 +64,7 @@ function! s:jqcmd(exe, opts, args, file) abort
     return printf('%s %s %s -f %s', a:exe, a:opts, a:args, a:file)
 endfunction
 
-function! jqplay#scratch(mods, jq_opts) abort
+function! jqplay#scratch(mods, args) abort
     if s:jqplay_open
         return s:error('jqplay: currently only one session per Vim instance is allowed.')
     endif
@@ -75,7 +75,7 @@ function! jqplay#scratch(mods, jq_opts) abort
     let jqfilter_name = 'jq-filter://' . expand('%')
     let jqfilter_buf = s:new_scratch(jqfilter_name, 'jq', 'botright', 10)
     let jqfilter_file = tempname()
-    let jq_cmd = s:jqcmd(s:get('exe'), s:get('opts'), a:jq_opts, jqfilter_file)
+    let jq_cmd = s:jqcmd(s:get('exe'), s:get('opts'), a:args, jqfilter_file)
 
     let s:jq_ctx = {
             \ 'in_buf': in_buf,
