@@ -95,7 +95,7 @@ function! jqplay#scratch(mods, jq_opts) abort
     if !empty(s:get('autocmds'))
         call s:set_autocmds()
     endif
-    execute 'command! -bar -bang JqplayClose call jqplay#closeall(<bang>0)'
+    execute 'command! -bar -bang JqplayClose call jqplay#close(<bang>0)'
     execute 'command! -bar -bang -nargs=? -complete=customlist,jqplay#complete Jqrun call s:run_manually(<bang>0, <q-args>)'
 endfunction
 
@@ -113,9 +113,9 @@ function! s:set_autocmds() abort
         execute printf('autocmd %s <buffer=%d> call s:input_changed()', events, in_buf)
 
         " Remove autocmds when filter, input or output buffer is deleted/wiped
-        execute printf('autocmd BufDelete,BufWipeout <buffer=%d> call jqplay#closeall(0)', filter_buf)
-        execute printf('autocmd BufDelete,BufWipeout <buffer=%d> call jqplay#closeall(0)', in_buf)
-        execute printf('autocmd BufDelete,BufWipeout <buffer=%d> call jqplay#closeall(0)', out_buf)
+        execute printf('autocmd BufDelete,BufWipeout <buffer=%d> call jqplay#close(0)', filter_buf)
+        execute printf('autocmd BufDelete,BufWipeout <buffer=%d> call jqplay#close(0)', in_buf)
+        execute printf('autocmd BufDelete,BufWipeout <buffer=%d> call jqplay#close(0)', out_buf)
     augroup END
 endfunction
 
@@ -123,7 +123,7 @@ function! jqplay#ctx() abort
     return s:jqplay_open ? s:jq_ctx : {}
 endfunction
 
-function! jqplay#closeall(bang) abort
+function! jqplay#close(bang) abort
     if !s:jqplay_open
         return
     endif
@@ -140,7 +140,9 @@ function! jqplay#closeall(bang) abort
 
     unlockvar s:jq_ctx
     let s:jqplay_open = 0
-    autocmd! jqplay
+    if exists('#jqplay')
+        autocmd! jqplay
+    endif
     delcommand JqplayClose
     delcommand Jqrun
     echohl WarningMsg | echomsg 'jqplay session closed' | echohl None
