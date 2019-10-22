@@ -8,9 +8,9 @@ License:    Same terms as Vim itself (see |license|)
 ==============================================================================
 INTRODUCTION                                           *jqplay* *jqplay-intro*
 
-Run jq (https://github.com/stedolan/jq) on a json buffer, and interactively
-update the output window whenever the input buffer or the jq filter
-buffer are modified, similar to https://jqplay.org.
+Run jq <https://github.com/stedolan/jq> on a json buffer, and interactively
+update the output window whenever the input buffer or the jq filter buffer are
+modified, similar to https://jqplay.org.
 
 ==============================================================================
 USAGE                                                           *jqplay-usage*
@@ -24,11 +24,9 @@ Commands ~
             input buffer are modified.
 
             {args} can be any jq command-line arguments as you would write
-            them in the shell, except for the "-f" or "--from-file" options
-            since the jq scratch buffer is already passed to jq through this
-            option. Jq is always invoked with the options specified in {args}.
-            These can be changed at any time through |jqplay-:Jqrun| (see
-            below).
+            them in the shell, except for the "-f" or "--from-file" options.
+            Jq is always invoked with the options specified in {args}. These
+            can be changed at any time through |jqplay-:Jqrun| (see below).
 
             The name of the output buffer is prefixed with "jq-output://" to
             distinguish it from the input buffer.
@@ -49,11 +47,6 @@ Commands ~
             be changed with the "autocmds" option, see |jqplay-autocmds|
             below.
 
-            Note: currently no [range] can be specified since there is no
-            simple way to update the start and end line when lines are being
-            added to or deleted in the json input buffer.
-            TODO: check |listener_add()|.
-
 :JqplayClose[!]                                          *jqplay-:JqplayClose*
             Close the interactive jqplay session. This will delete all
             autocommands that are invoking jq on buffer change.
@@ -62,8 +55,8 @@ Commands ~
             open. Add [!] to also |:bdelete| both buffers. Think of
             ":JqplayClose!" as "I am done, close everything".
 
-            The command is available only after running ":Jqplay", and is
-            deleted after the first invocation.
+            The command is available only after running |jqplay-:Jqplay|, and
+            is deleted after the first invocation.
 
 :Jqrun[!] [{args}]                                             *jqplay-:Jqrun*
             Invoke jq manually with the jq command-line arguments {args}. This
@@ -177,7 +170,7 @@ Option 1, use |autocommands|:
         autocmd!
         autocmd FileType json
             \ if bufname('%')[:11] ==# 'jq-output://' |
-            \   setlocal bufhidden=wipe               |
+            \   setlocal wincolor=NormalNC            |
             \ endif
     augroup END
 <
@@ -186,7 +179,7 @@ Option 2, use a |ftplugin| file:
 >
     " in after/ftplugin/json.vim
     if bufname('%')[:11] ==# 'jq-output://'
-        setlocal bufhidden=wipe
+        setlocal wincolor=NormalNC
     endif
 <
 
