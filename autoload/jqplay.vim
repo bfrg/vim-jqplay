@@ -65,6 +65,10 @@ function! s:jqcmd(exe, opts, args, file) abort
 endfunction
 
 function! jqplay#scratch(mods, args) abort
+    if a:args =~# '-f\>\|--from-file\>'
+        return s:error('jqplay: -f and --from-file options not allowed')
+    endif
+
     if s:jqplay_open
         return s:error('jqplay: currently only one session per Vim instance is allowed.')
     endif
@@ -131,6 +135,10 @@ function! jqplay#close(bang) abort
 endfunction
 
 function! s:run_manually(bang, args) abort
+    if a:args =~# '-f\>\|--from-file\>'
+        return s:error('jqplay: -f and --from-file options not allowed')
+    endif
+
     let in_buf = s:jq_ctx.in_buf
     let filter_buf = s:jq_ctx.filter_buf
     let filter_tick = getbufvar(filter_buf, 'jq_changedtick')
