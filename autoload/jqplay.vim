@@ -85,8 +85,6 @@ function! jqplay#scratch(mods, jq_opts) abort
             \ 'cmd': jq_cmd
             \ }
 
-    lockvar s:jq_ctx
-
     " FIXME remove buffer-local variables when jqplay session is closed
     call setbufvar(in_buf, 'jq_changedtick', getbufvar(in_buf, 'changedtick'))
     call setbufvar(jqfilter_buf, 'jq_changedtick', getbufvar(jqfilter_buf, 'changedtick'))
@@ -113,6 +111,7 @@ function! jqplay#ctx() abort
     return s:jqplay_open ? s:jq_ctx : {}
 endfunction
 
+" FIXME if user runs :autocmd! jqplay, s:jqplay_open will remain 1
 function! jqplay#close(bang) abort
     if !s:jqplay_open
         return
@@ -124,7 +123,6 @@ function! jqplay#close(bang) abort
         noautocmd execute 'bdelete' s:jq_ctx.out_buf
     endif
 
-    unlockvar s:jq_ctx
     autocmd! jqplay
     delcommand JqplayClose
     delcommand Jqrun
@@ -144,9 +142,7 @@ function! s:run_manually(bang, args) abort
     let jq_ctx = copy(s:jq_ctx)
     let jq_ctx.cmd = s:jqcmd(s:get('exe'), s:get('opts'), a:args, s:jq_ctx.filter_file)
     if a:bang
-        unlockvar s:jq_ctx
         let s:jq_ctx = jq_ctx
-        lockvar s:jq_ctx
     endif
     call s:jq_job(jq_ctx, function('s:close_cb_2', [in_buf, filter_buf]))
 endfunction
