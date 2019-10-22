@@ -3,7 +3,7 @@
 " File:         autoload/jqplay.vim
 " Author:       bfrg <https://github.com/bfrg>
 " Website:      https://github.com/bfrg/vim-jqplay
-" Last Change:  Oct 21, 2019
+" Last Change:  Oct 22, 2019
 " License:      Same as Vim itself (see :h license)
 " ==============================================================================
 
@@ -53,14 +53,14 @@ function! s:new_scratch(bufname, filetype, mods, ...) abort
     " https://github.com/vim/vim/issues/4745
     silent call deletebufline(bufnr, 1, '$')
 
-    " Filetype will be overridden when buffer loaded and bufname ends with
-    " .json, like jq-filter:///path/to/inputfile.json, therefore call it again
+    " Filetype will be overridden when bufname ends with .json, like
+    " jq-filter:///path/to/inputfile.json, therefore call it again
     call setbufvar(bufnr, '&filetype', a:filetype)
 
     return bufnr
 endfunction
 
-function! s:jqcmd(exe, opts, args, file)
+function! s:jqcmd(exe, opts, args, file) abort
     return printf('%s %s %s -f %s', a:exe, a:opts, a:args, a:file)
 endfunction
 
@@ -95,8 +95,8 @@ function! jqplay#scratch(mods, jq_opts) abort
     if !empty(s:get('autocmds'))
         call s:set_autocmds()
     endif
-    execute "command! -bar -bang JqplayClose call jqplay#closeall(<bang>0)"
-    execute "command! -bar -bang -nargs=? -complete=customlist,jqplay#complete Jqrun call s:run_manually(<bang>0, <q-args>)"
+    execute 'command! -bar -bang JqplayClose call jqplay#closeall(<bang>0)'
+    execute 'command! -bar -bang -nargs=? -complete=customlist,jqplay#complete Jqrun call s:run_manually(<bang>0, <q-args>)'
 endfunction
 
 function! s:set_autocmds() abort
