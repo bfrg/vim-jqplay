@@ -101,9 +101,8 @@ function! jqplay#ctx() abort
     return s:jqplay_open ? s:jq_ctx : {}
 endfunction
 
-" FIXME if user runs :autocmd! jqplay, s:jqplay_open will remain 1
 function! jqplay#close(bang) abort
-    if !s:jqplay_open
+    if !s:jqplay_open && !(exists('#jqplay#BufDelete') || exists('#jqplay#BufWipeout'))
         return
     endif
     call jqplay#stop()
