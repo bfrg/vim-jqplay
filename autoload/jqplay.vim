@@ -3,7 +3,7 @@
 " File:         autoload/jqplay.vim
 " Author:       bfrg <https://github.com/bfrg>
 " Website:      https://github.com/bfrg/vim-jqplay
-" Last Change:  Oct 22, 2019
+" Last Change:  Oct 23, 2019
 " License:      Same as Vim itself (see :h license)
 " ==============================================================================
 
@@ -46,8 +46,9 @@ function! s:new_scratch(bufname, filetype, mods, ...) abort
     return bufnr
 endfunction
 
-function! s:jqcmd(exe, opts, args, file) abort
-    return printf('%s %s %s -f %s', a:exe, a:opts, a:args, a:file)
+function! s:jqcmd(exe, opts, args, ...) abort
+    return a:0 ? printf('%s %s %s -f %s', a:exe, a:opts, a:args, a:1)
+            \ : printf('%s %s %s', a:exe, a:opts, a:args)
 endfunction
 
 function! jqplay#scratch(mods, args) abort
