@@ -162,7 +162,7 @@ function! s:run_manually(bang, args) abort
     let filter_tick = getbufvar(filter_buf, 'jq_changedtick')
 
     if filter_tick != getbufvar(filter_buf, 'changedtick')
-        call writefile(getbufline(filter_buf, 1, '$'), s:jq_ctx.filter_file)
+        silent execute 'write' s:jq_ctx.filter_file
     endif
 
     let jq_ctx = copy(s:jq_ctx)
@@ -178,7 +178,7 @@ function! s:filter_changed() abort
     if getbufvar(filter_buf, 'jq_changedtick') == getbufvar(filter_buf, 'changedtick')
         return
     endif
-    call writefile(getbufline(filter_buf, 1, '$'), s:jq_ctx.filter_file)
+    silent execute 'write' s:jq_ctx.filter_file
     call s:jq_job(s:jq_ctx, function('s:close_cb', [filter_buf]))
 endfunction
 
