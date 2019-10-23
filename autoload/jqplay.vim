@@ -51,6 +51,29 @@ function! s:jqcmd(exe, opts, args, ...) abort
             \ : printf('%s %s %s', a:exe, a:opts, a:args)
 endfunction
 
+function! s:parseargs(args) abort
+    " Split on spaces but not backslash-escaped ones, ignore spaces inside quotes
+    " Quotes can have escaped quotes, like "hello \"escaped string\" world"
+    let opts = split(a:args, '\v%([^\\]\\)@<!\s+|([''"])%(.{-})\\@<!\1\zs\s*')
+    let filter_file = ''
+    if len(opts) == 1 && opts[0] !=# '-L'
+        return ['', opts[0]]
+    endif
+    for i in range(len(opts))
+        if opts[i] ==# '-f' || opts[i] ==# '--from-file'
+            let filter_file = expand(opts[i+1])
+            let opts[i+1] = shellescape(filter_file)
+        elseif opts[i] ==# '-L'
+            let opts[i+1] = shellescape(expand(opts[i+1]))
+        elseif opts[i] =~# '-L\S'
+            let opts[i] = '-L ' . shellescape(expand(opts[i][2:]))
+        elseif opts[i] ==# '--slurpfile' || opts[i] ==# '--argfile'
+            let opts[i+2] = shellescape(expand(opts[i+2]))
+        endif
+    endfor
+    return [filter_file, join(opts)]
+endfunction
+
 function! jqplay#scratch(mods, args) abort
     if a:args =~# '-f\>\|--from-file\>'
         return s:error('jqplay: -f and --from-file options not allowed')
