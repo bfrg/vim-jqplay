@@ -24,9 +24,9 @@ Commands ~
             input buffer are modified.
 
             {args} can be any jq command-line arguments as you would write
-            them in the shell, except for the "-f" or "--from-file" options.
-            Jq is always invoked with the options specified in {args}. These
-            can be changed at any time through |jqplay-:Jqrun| (see below).
+            them in the shell. Jq is always invoked with the options specified
+            in {args}. These can be changed at any time through
+            |jqplay-:Jqrun| (see below).
 
             The name of the output buffer is prefixed with "jq-output://" to
             distinguish it from the input buffer.

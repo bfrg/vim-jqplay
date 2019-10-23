@@ -75,10 +75,6 @@ function! s:parseargs(args) abort
 endfunction
 
 function! jqplay#scratch(mods, args) abort
-    if a:args =~# '-f\>\|--from-file\>'
-        return s:error('jqplay: -f and --from-file options not allowed')
-    endif
-
     if s:jqplay_open
         return s:error('jqplay: currently only one session per Vim instance is allowed.')
     endif
@@ -86,10 +82,23 @@ function! jqplay#scratch(mods, args) abort
     let in_buf = bufnr('%')
     let out_name = 'jq-output://' . expand('%')
     let out_buf = s:new_scratch(out_name, 'json', a:mods)
-    let jqfilter_name = 'jq-filter://' . expand('%')
-    let jqfilter_buf = s:new_scratch(jqfilter_name, 'jq', 'botright', 10)
-    let jqfilter_file = tempname()
-    let jq_cmd = s:jqcmd(s:get('exe'), s:get('opts'), a:args, jqfilter_file)
+    let [filter_file, jq_args] = s:parseargs(a:args)
+
+    if empty(filter_file)
+        let jqfilter_name = 'jq-filter://' . expand('%')
+        let jqfilter_buf = s:new_scratch(jqfilter_name, 'jq', 'botright', 10)
+        let jqfilter_file = tempname()
+        let jq_cmd = s:jqcmd(s:get('exe'), s:get('opts'), a:args, jqfilter_file)
+    else
+        let jqfilter_file = filter_file
+        if !bufexists(jqfilter_file) || bufwinnr(jqfilter_file) == -1
+            silent execute 'botright keepalt split' jqfilter_file
+            resize 10
+            wincmd p
+        endif
+        let jqfilter_buf = bufnr(jqfilter_file)
+        let jq_cmd = s:jqcmd(s:get('exe'), s:get('opts'), jq_args)
+    endif
 
     let s:jq_ctx = {
             \ 'in_buf': in_buf,
@@ -145,7 +154,7 @@ endfunction
 
 function! s:run_manually(bang, args) abort
     if a:args =~# '-f\>\|--from-file\>'
-        return s:error('jqplay: -f and --from-file options not allowed')
+        return s:error(":Jqrun does not support the -f and --from-file options")
     endif
 
     let in_buf = s:jq_ctx.in_buf

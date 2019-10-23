@@ -15,7 +15,8 @@ Running `:Jqplay {args}` on the current json buffer opens two new windows:
 2. The second window displays the `jq` output (prefixed with `jq-output://`).
 
 `{args}` can be any `jq` command-line arguments as you would write them in the
-shell (except for the `-f` and `--from-file` options, and the filter).
+shell. If a script file is passed with `-f` or `--from-file`, it will be opened
+instead of a `jq` scratch buffer.
 
 Jq will run automatically whenever the json input buffer or the `jq` filter
 buffer are modified. By default `jq` is invoked when the `InsertLeave` or
