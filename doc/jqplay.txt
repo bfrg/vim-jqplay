@@ -17,7 +17,7 @@ USAGE                                                           *jqplay-usage*
 
 Commands ~
 
-:Jqplay {args}                                                *jqplay-:Jqplay*
+:Jqplay [{args}]                                              *jqplay-:Jqplay*
             Open a new jq scratch buffer and apply the entered jq filter to
             the current json buffer. The output is displayed in a new |:split|
             window, and updated interactively when both the jq buffer or the
