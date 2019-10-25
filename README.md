@@ -4,6 +4,14 @@ Run [jq][jq] on a json buffer, and interactively update the output window
 whenever the input buffer or the jq filter buffer are modified similar to
 [jqplay.org][jqplay].
 
+<dl>
+  <p align="center">
+  <a href="https://asciinema.org/a/276970">
+    <img src="https://asciinema.org/a/276970.png" width="480">
+  </a>
+  </p>
+</dl>
+
 
 ## Usage
 
