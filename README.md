@@ -1,13 +1,22 @@
 # vim-jqplay
 
 Run [jq][jq] on a json buffer, and interactively update the output window
-whenever the input buffer or the jq filter buffer are modified, similar to
+whenever the input buffer or the jq filter buffer are modified similar to
 [jqplay.org][jqplay].
 
 
 ## Usage
 
-#### Run jq automatically whenever input or filter buffer are modified
+### Quick Overview
+
+| Command             | Description                                                         |
+| ------------------- | ------------------------------------------------------------------- |
+| `:Jqplay [{args}]`  | Start an interactive _jqplay_ session using the jq options `{args}`.|
+| `:Jqrun [{args}]`   | Invoke jq manually with the jq options `{args}`.                    |
+| `:JqplayClose`      | Close the _jqplay_ session.                                         |
+| `:Jqstop`           | Terminate a running jq process.                                     |
+
+### Run jq automatically whenever input or filter buffer are modified
 
 Running `:Jqplay {args}` on the current json buffer opens two new windows:
 1. The first window contains a `jq` scratch buffer (prefixed with
@@ -15,32 +24,34 @@ Running `:Jqplay {args}` on the current json buffer opens two new windows:
 2. The second window displays the `jq` output (prefixed with `jq-output://`).
 
 `{args}` can be any `jq` command-line arguments as you would write them in the
-shell (except for the `-f` and `--from-file` options, and the filter).
+shell (except for the `-f` and `--from-file` options and the filter).
 
 Jq will run automatically whenever the json input buffer or the `jq` filter
 buffer are modified. By default `jq` is invoked when the `InsertLeave` or
 `TextChanged` events are triggered. See `:help jqplay-config` or
-[configuration][#Configuration] below on how to change the list of events.
+[configuration](#configuration) below on how to change the list of events.
 
-
-#### Run jq manually on demand
+### Run jq manually on demand
 
 Use `:Jqrun {args}` at any time to invoke `jq` manually with the `jq` arguments
-`{args}` and the current `jq-filter://`. This will temporarily override the `jq`
-options previously set with `:Jqplay {args}`. Add a `!` to `:Jqrun!` to
-permanently override the options for the `jq` buffer.
+`{args}` and the current `jq-filter://` buffer. This will temporarily override
+the `jq` options previously set with `:Jqplay {args}`. Add a bang to `:Jqrun!`
+to permanently override the options for the `jq` buffer.
 
-`:Jqrun` is useful to quickly run the same `jq` script with different set of `jq`
-arguments.
+`:Jqrun` is useful to quickly run the same `jq` script with different set of
+`jq` arguments.
 
 Alternatively, if you don't want to run `jq` interactively on every buffer
 change, disable all autocommands and use `:Jqrun` instead.
 
-#### Close jqplay or stop a jq process
+**Note:** The command is available only after starting a _jqplay_ session with
+`:Jqplay`, and is deleted after the session is closed.
+
+### Close jqplay or stop a jq process
 
 Running `:JqplayClose` will stop the interactive session. The `jq` scratch
-buffer and the output buffer will be kept open. Running `:JqplayClose!` with
-a bang will stop the session and also delete both buffers. You can think of
+buffer and the output buffer will be kept open. Running `:JqplayClose!` with a
+bang will stop the session and also delete both buffers. Think of
 `:JqplayClose!` as _I am done, close everything!_
 
 `jq` processes previously started with `:Jqplay` or `:Jqrun` can be stopped at
@@ -60,7 +71,7 @@ The following entries can be set:
 | Key        | Description                 | Default                          |
 | ---------- | --------------------------- | -------------------------------- |
 | `exe`      | Path to `jq` executable     | value found in `$PATH`           |
-| `opts`     | Default `jq` arguments      | ""                               |
+| `opts`     | Default `jq` arguments      | -                                |
 | `autocmds` | Events when `jq` is invoked | `["InsertLeave", "TextChanged"]` |
 
 If you don't want to run `jq` interactively on every buffer change, set
@@ -97,8 +108,8 @@ let b:jqplay = { 'opts': '--tab', 'autocmds': [] }
 #### Example 3: `:JqplayScratch`
 
 `:Jqplay` is a buffer-local command available only in `json` buffers. If you
-want to start a jqplay session from anywhere, add the following to your `vimrc`:
-
+want to start a _jqplay_ session from anywhere, add the following to your
+`vimrc`:
 ```vim
 command! -nargs=? -complete=customlist,jqplay#complete JqplayScratch enew |
         \ setlocal buflisted buftype=nofile bufhidden=hide noswapfile filetype=json |
