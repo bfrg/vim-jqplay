@@ -78,6 +78,12 @@ Commands ~
             job will be terminated. See |job_stop()| for more details on the
             {how} values.
 
+:JqplayScratch [{args}]                                *jqplay-:JqplayScratch*
+            Start an interactive session in a new |tab| page. This command
+            will open a new json scratch buffer as input. You can run it from
+            any filetype, as opposed to |jqplay:Jqplay| which is buffer-local
+            to json buffers.
+
 Functions ~
 
 jqplay#jq_job()                                              *jqplay#jq_job()*
@@ -142,22 +148,6 @@ Examples ~
 
 ==============================================================================
 FAQ                                                               *jqplay-faq*
-
-E492: Not an editor command: Jqplay ~
-
-|jqplay:Jqplay| is a buffer-local command available only in json buffers.
-If you want to start a jqplay session from anywhere, add the following to your
-|vimrc|:
->
-    command! -nargs=? -complete=customlist,jqplay#complete JqplayScratch
-            \ enew |
-            \ setlocal buflisted buftype=nofile bufhidden=hide |
-            \ setlocal noswapfile filetype=json |
-            \ <mods> Jqplay <args>
-
-You can precede ":JqplayScratch" with a command modifier. For example,
-":vert JqplayScratch {args}" opens the "jq-output://" buffer in a new vertical
-split.
 
 How can I override buffer settings of jq-output:// buffers? ~
 
