@@ -53,11 +53,8 @@ Commands ~
 
             Without the [!] all buffers are kept open. Adding a [!] will also
             |:bdelete| the jq filter and output buffers. If the input buffer
-            is a scratch buffer (|buftype|=nofile) it will be deleted as well.
-            Think of ":JqplayClose!" as "I am done, close everything".
-
-            The command is available only after running |jqplay-:Jqplay|, and
-            is deleted after the first invocation.
+            is a scratch buffer ('buftype' is "nofile") it will be deleted as
+            well. Think of ":JqplayClose!" as "I am done, close everything".
 
 :Jqrun[!] [{args}]                                             *jqplay-:Jqrun*
             Invoke jq manually with the jq command-line arguments {args}. This
