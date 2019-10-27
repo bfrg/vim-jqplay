@@ -3,7 +3,7 @@
 " File:         autoload/jqplay.vim
 " Author:       bfrg <https://github.com/bfrg>
 " Website:      https://github.com/bfrg/vim-jqplay
-" Last Change:  Oct 22, 2019
+" Last Change:  Oct 27, 2019
 " License:      Same as Vim itself (see :h license)
 " ==============================================================================
 
@@ -56,7 +56,7 @@ function! jqplay#scratch(mods, args) abort
     endif
 
     if s:jqplay_open
-        return s:error('jqplay: currently only one session per Vim instance is allowed.')
+        return s:error('jqplay: only one session per Vim instance is allowed')
     endif
 
     let in_buf = bufnr('%')
@@ -94,6 +94,7 @@ function! jqplay#scratch(mods, args) abort
 
     execute 'command! -bar -bang JqplayClose call jqplay#close(<bang>0)'
     execute 'command! -bar -bang -nargs=? -complete=customlist,jqplay#complete Jqrun call s:run_manually(<bang>0, <q-args>)'
+    execute 'command! -nargs=? -complete=custom,jqplay#stophow Jqstop call jqplay#stop(<f-args>)'
     let s:jqplay_open = 1
 endfunction
 
@@ -115,6 +116,7 @@ function! jqplay#close(bang) abort
     autocmd! jqplay
     delcommand JqplayClose
     delcommand Jqrun
+    delcommand Jqstop
     let s:jqplay_open = 0
     echohl WarningMsg | echomsg 'jqplay session closed' | echohl None
 endfunction
