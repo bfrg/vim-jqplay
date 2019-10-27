@@ -3,7 +3,7 @@
 " File:         autoload/jqplay.vim
 " Author:       bfrg <https://github.com/bfrg>
 " Website:      https://github.com/bfrg/vim-jqplay
-" Last Change:  Oct 27, 2019
+" Last Change:  Oct 28, 2019
 " License:      Same as Vim itself (see :h license)
 " ==============================================================================
 
@@ -50,7 +50,7 @@ function! s:jqcmd(exe, opts, args, file) abort
     return printf('%s %s %s -f %s', a:exe, a:opts, a:args, a:file)
 endfunction
 
-function! jqplay#scratch(mods, args) abort
+function! jqplay#start(mods, args) abort
     if a:args =~# '-f\>\|--from-file\>'
         return s:error('jqplay: -f and --from-file options not allowed')
     endif
