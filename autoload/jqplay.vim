@@ -59,36 +59,48 @@ function! jqplay#scratch(mods, args) abort
         return s:error('jqplay: only one session per Vim instance allowed')
     endif
 
+    " If -n/--null-input is passed we won't need an input buffer for jq
+    let null_input = a:args =~# '-n\|--null-input' ? 1 : 0
+
     let in_buf = bufnr('%')
-    let out_name = 'jq-output://' . expand('%')
+    let jqfilter_name = 'jq-filter://' . (null_input ? '' : expand('%'))
+    if null_input
+        let jqfilter_buf = s:new_scratch(jqfilter_name, 'jq', 'tab')
+    else
+        let jqfilter_buf = s:new_scratch(jqfilter_name, 'jq', 'botright', 10)
+    endif
+    let out_name = 'jq-output://' . (null_input ? '' : expand('%'))
     let out_buf = s:new_scratch(out_name, 'json', a:mods)
-    let jqfilter_name = 'jq-filter://' . expand('%')
-    let jqfilter_buf = s:new_scratch(jqfilter_name, 'jq', 'botright', 10)
     let jqfilter_file = tempname()
     let jq_cmd = s:jqcmd(s:get('exe'), s:get('opts'), a:args, jqfilter_file)
 
     let s:jq_ctx = {
-            \ 'in_buf': in_buf,
+            \ 'in_buf': null_input ? -1 : in_buf,
             \ 'out_buf': out_buf,
             \ 'filter_buf': jqfilter_buf,
             \ 'filter_file': jqfilter_file,
             \ 'cmd': jq_cmd
             \ }
 
-    " FIXME remove buffer-local variables when jqplay session is closed
-    call setbufvar(in_buf, 'jq_changedtick', getbufvar(in_buf, 'changedtick'))
+    if !null_input
+        call setbufvar(in_buf, 'jq_changedtick', getbufvar(in_buf, 'changedtick'))
+    endif
     call setbufvar(jqfilter_buf, 'jq_changedtick', getbufvar(jqfilter_buf, 'changedtick'))
 
     augroup jqplay
         autocmd!
-        execute printf('autocmd BufDelete,BufWipeout <buffer=%d> call jqplay#close(0)', in_buf)
+        if !null_input
+            execute printf('autocmd BufDelete,BufWipeout <buffer=%d> call jqplay#close(0)', in_buf)
+        endif
         execute printf('autocmd BufDelete,BufWipeout <buffer=%d> call jqplay#close(0)', out_buf)
         execute printf('autocmd BufDelete,BufWipeout <buffer=%d> call jqplay#close(0)', jqfilter_buf)
     augroup END
 
     if !empty(s:get('autocmds'))
         let events = join(s:get('autocmds'), ',')
-        execute printf('autocmd jqplay %s <buffer> call s:input_changed()', events)
+        if !null_input
+            execute printf('autocmd jqplay %s <buffer> call s:input_changed()', events)
+        endif
         execute printf('autocmd jqplay %s <buffer=%d> call s:filter_changed()', events, jqfilter_buf)
     endif
 
@@ -112,7 +124,7 @@ function! jqplay#close(bang) abort
     if a:bang
         execute 'bdelete' s:jq_ctx.filter_buf
         execute 'bdelete' s:jq_ctx.out_buf
-        if getbufvar(s:jq_ctx.in_buf, '&buftype') ==# 'nofile'
+        if s:jq_ctx.in_buf != -1 && getbufvar(s:jq_ctx.in_buf, '&buftype') ==# 'nofile'
             execute 'bdelete' s:jq_ctx.in_buf
         endif
     endif
@@ -142,7 +154,11 @@ function! s:run_manually(bang, args) abort
     if a:bang
         let s:jq_ctx = jq_ctx
     endif
-    call s:jq_job(jq_ctx, function('s:close_cb_2', [in_buf, filter_buf]))
+    if in_buf == -1
+        call s:jq_job(s:jq_ctx, function('s:close_cb', [filter_buf]))
+    else
+        call s:jq_job(jq_ctx, function('s:close_cb_2', [in_buf, filter_buf]))
+    endif
 endfunction
 
 function! s:filter_changed() abort
@@ -180,17 +196,21 @@ function! s:jq_job(jq_ctx, close_cb) abort
         call job_stop(s:job)
     endif
 
+    let opts = {
+            \ 'out_cb': {_,msg -> appendbufline(a:jq_ctx.out_buf, '$', msg)},
+            \ 'err_cb': {_,msg -> appendbufline(a:jq_ctx.out_buf, '$', '// ' . msg)},
+            \ 'close_cb': a:close_cb
+            \ }
+
+    if a:jq_ctx.in_buf != -1
+        call extend(opts, {'in_io': 'buffer', 'in_buf': a:jq_ctx.in_buf})
+    endif
+
     " https://github.com/vim/vim/issues/4688
     " E631: write_buf_line(): write failed
     " This occurs only for large files
     try
-        let s:job = job_start([&shell, &shellcmdflag, a:jq_ctx.cmd], {
-                \ 'in_io': 'buffer',
-                \ 'in_buf': a:jq_ctx.in_buf,
-                \ 'out_cb': {_,msg -> appendbufline(a:jq_ctx.out_buf, '$', msg)},
-                \ 'err_cb': {_,msg -> appendbufline(a:jq_ctx.out_buf, '$', '// ' . msg)},
-                \ 'close_cb': a:close_cb
-                \ })
+        let s:job = job_start([&shell, &shellcmdflag, a:jq_ctx.cmd], opts)
     catch /^Vim\%((\a\+)\)\=:E631:/
     endtry
 endfunction

@@ -20,8 +20,8 @@ Commands ~
 :Jqplay [{args}]                                              *jqplay-:Jqplay*
             Open a new jq scratch buffer and apply the entered jq filter to
             the current json buffer. The output is displayed in a new |:split|
-            window, and updated interactively when both the jq buffer or the
-            input buffer are modified.
+            window, and updated interactively when both the filter buffer or
+            the input buffer are modified.
 
             {args} can be any jq command-line arguments as you would write
             them in the shell, except for the "-f" or "--from-file" options.
@@ -172,7 +172,6 @@ Option 1, use |autocommands|:
             \ endif
     augroup END
 <
-
 Option 2, use a |ftplugin| file:
 >
     " in after/ftplugin/json.vim
@@ -180,5 +179,4 @@ Option 2, use a |ftplugin| file:
         setlocal wincolor=NormalNC
     endif
 <
-
  vim:tw=78:et:ft=help:norl:

@@ -17,34 +17,35 @@ whenever the input buffer or the jq filter buffer are modified similar to
 
 ### Quick Overview
 
-| Command             | Description                                                         |
-| ------------------- | ------------------------------------------------------------------- |
-| `:Jqplay [{args}]`  | Start an interactive _jqplay_ session using the jq options `{args}`.|
-| `:Jqrun [{args}]`   | Invoke jq manually with the jq options `{args}`.                    |
-| `:JqplayClose`      | Close the _jqplay_ session.                                         |
-| `:Jqstop`           | Terminate a running jq process.                                     |
+| Command                   | Description                                                         |
+| ------------------------- | ------------------------------------------------------------------- |
+| `:Jqplay [{args}]`        | Start an interactive session using the current json buffer and the jq options `{args}`.|
+| `:Jqrun [{args}]`         | Invoke jq manually with the jq options `{args}`.                    |
+| `:JqplayClose`            | Stop the _jqplay_ session.                                          |
+| `:JqplayClose!`           | Stop the _jqplay_ session and delete all associated scratch buffers.|
+| `:Jqstop`                 | Terminate a running jq process.                                     |
 
-### Run jq automatically whenever input or filter buffer are modified
+### Run jq whenever input or filter buffer are modified
 
 Running `:Jqplay {args}` on the current json buffer opens two new windows:
-1. The first window contains a `jq` scratch buffer (prefixed with
-   `jq-filter://`) that is applied interactively to the current json buffer.
-2. The second window displays the `jq` output (prefixed with `jq-output://`).
+- The first window contains a `jq` scratch buffer prefixed with `jq-filter://`
+  that is applied interactively to the current json buffer.
+- The second window displays the `jq` output, prefixed with `jq-output://`.
 
 `{args}` can be any `jq` command-line arguments as you would write them in the
 shell (except for the `-f` and `--from-file` options and the filter).
 
 Jq will run automatically whenever the json input buffer or the `jq` filter
 buffer are modified. By default `jq` is invoked when the `InsertLeave` or
-`TextChanged` events are triggered. See `:help jqplay-config` or
-[configuration](#configuration) below on how to change the list of events.
+`TextChanged` events are triggered. See [configuration](#configuration) below on
+how to change the list of events.
 
 ### Run jq manually on demand
 
 Use `:Jqrun {args}` at any time to invoke `jq` manually with the `jq` arguments
 `{args}` and the current `jq-filter://` buffer. This will temporarily override
 the `jq` options previously set with `:Jqplay {args}`. Add a bang to `:Jqrun!`
-to permanently override the options for the `jq` buffer.
+to permanently override the options for the `jq-filter://` buffer.
 
 `:Jqrun` is useful to quickly run the same `jq` script with different set of
 `jq` arguments.
@@ -57,7 +58,7 @@ change, disable all autocommands and use `:Jqrun` instead.
 
 ### Close jqplay or stop a jq process
 
-Running `:JqplayClose` will stop the interactive session. The `jq` scratch
+Running `:JqplayClose` will stop the interactive session. The `jq` filter
 buffer and the output buffer will be kept open. Run `:JqplayClose!` with a bang
 to stop the session and also delete the buffers. Think of `:JqplayClose!` as _I
 am done, close everything!_
@@ -84,8 +85,6 @@ The following entries can be set:
 
 If you don't want to run `jq` interactively on every buffer change, set
 `autocmds` to an empty list and run `:Jqrun` manually.
-
-See `:help jqplay-config` for more details.
 
 
 ## Examples
