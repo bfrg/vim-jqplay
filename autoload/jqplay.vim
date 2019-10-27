@@ -56,7 +56,7 @@ function! jqplay#scratch(mods, args) abort
     endif
 
     if s:jqplay_open
-        return s:error('jqplay: only one session per Vim instance is allowed')
+        return s:error('jqplay: only one session per Vim instance allowed')
     endif
 
     let in_buf = bufnr('%')
@@ -107,13 +107,16 @@ function! jqplay#close(bang) abort
         return
     endif
     call jqplay#stop()
+    autocmd! jqplay
 
     if a:bang
-        noautocmd execute 'bdelete' s:jq_ctx.filter_buf
-        noautocmd execute 'bdelete' s:jq_ctx.out_buf
+        execute 'bdelete' s:jq_ctx.filter_buf
+        execute 'bdelete' s:jq_ctx.out_buf
+        if getbufvar(s:jq_ctx.in_buf, '&buftype') ==# 'nofile'
+            execute 'bdelete' s:jq_ctx.in_buf
+        endif
     endif
 
-    autocmd! jqplay
     delcommand JqplayClose
     delcommand Jqrun
     delcommand Jqstop

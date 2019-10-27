@@ -51,9 +51,10 @@ Commands ~
             Close the interactive jqplay session. This will delete all
             autocommands that are invoking jq on buffer change.
 
-            By default the jq scratch buffer and the output buffer are kept
-            open. Add [!] to also |:bdelete| both buffers. Think of
-            ":JqplayClose!" as "I am done, close everything".
+            Without the [!] all buffers are kept open. Adding a [!] will also
+            |:bdelete| the jq filter and output buffers. If the input buffer
+            is a scratch buffer (|buftype|=nofile) it will be deleted as well.
+            Think of ":JqplayClose!" as "I am done, close everything".
 
             The command is available only after running |jqplay-:Jqplay|, and
             is deleted after the first invocation.

@@ -58,9 +58,9 @@ change, disable all autocommands and use `:Jqrun` instead.
 ### Close jqplay or stop a jq process
 
 Running `:JqplayClose` will stop the interactive session. The `jq` scratch
-buffer and the output buffer will be kept open. Running `:JqplayClose!` with a
-bang will stop the session and also delete both buffers. Think of
-`:JqplayClose!` as _I am done, close everything!_
+buffer and the output buffer will be kept open. Run `:JqplayClose!` with a bang
+to stop the session and also delete the buffers. Think of `:JqplayClose!` as _I
+am done, close everything!_
 
 `jq` processes previously started with `:Jqplay` or `:Jqrun` can be stopped at
 any time with `:Jqstop`.
