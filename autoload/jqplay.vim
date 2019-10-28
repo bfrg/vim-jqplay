@@ -30,6 +30,8 @@ function! s:error(msg) abort
 endfunction
 
 function! s:new_scratch(bufname, filetype, mods, ...) abort
+    " FIXME if jq-filter://foo.json is listed, bufnr('jq-filter://', 1) will
+    " return bufnr of that buffer and won't create a new one!!!
     let bufnr = bufnr(a:bufname, 1)
 
     if bufwinnr(bufnr) == -1
@@ -59,37 +61,45 @@ function! jqplay#start(mods, args) abort
         return s:error('jqplay: only one session per Vim instance allowed')
     endif
 
-    " If -n/--null-input is passed we won't need an input buffer for jq
+    " If -n/--null-input is passed we won't need an input buffer for jq, unless
+    " in combination with -R/--raw-input: https://github.com/stedolan/jq/issues/1956
     let null_input = a:args =~# '-\a*n\a*\>\|--null-input\>' ? 1 : 0
 
-    let in_buf = bufnr('%')
-    let jqfilter_name = 'jq-filter://' . (null_input ? '' : expand('%'))
-    if null_input
+    " If -R/--raw-input is passed, function can be called on non-json buffers
+    let raw_input = a:args =~# '-\a*R\a*\>\|--raw-input\>' ? 1 : 0
+
+    if !raw_input && !null_input && &filetype !=# 'json'
+        return s:error('jqplay: current buffer must be json, unless -n and/or -R are passed')
+    endif
+
+    let in_buf = null_input && !raw_input ? -1 : bufnr('%')
+    let jqfilter_name = 'jq-filter://' . (null_input && !raw_input ? '' : expand('%'))
+    if null_input && !raw_input
         let jqfilter_buf = s:new_scratch(jqfilter_name, 'jq', 'tab')
     else
         let jqfilter_buf = s:new_scratch(jqfilter_name, 'jq', 'botright', 10)
     endif
-    let out_name = 'jq-output://' . (null_input ? '' : expand('%'))
+    let out_name = 'jq-output://' . (null_input && !raw_input ? '' : expand('%'))
     let out_buf = s:new_scratch(out_name, 'json', a:mods)
     let jqfilter_file = tempname()
     let jq_cmd = s:jqcmd(s:get('exe'), s:get('opts'), a:args, jqfilter_file)
 
     let s:jq_ctx = {
-            \ 'in_buf': null_input ? -1 : in_buf,
+            \ 'in_buf': in_buf,
             \ 'out_buf': out_buf,
             \ 'filter_buf': jqfilter_buf,
             \ 'filter_file': jqfilter_file,
             \ 'cmd': jq_cmd
             \ }
 
-    if !null_input
+    if !null_input || (null_input && raw_input)
         call setbufvar(in_buf, 'jq_changedtick', getbufvar(in_buf, 'changedtick'))
     endif
     call setbufvar(jqfilter_buf, 'jq_changedtick', getbufvar(jqfilter_buf, 'changedtick'))
 
     augroup jqplay
         autocmd!
-        if !null_input
+        if !null_input || (null_input && raw_input)
             execute printf('autocmd BufDelete,BufWipeout <buffer=%d> call jqplay#close(0)', in_buf)
         endif
         execute printf('autocmd BufDelete,BufWipeout <buffer=%d> call jqplay#close(0)', out_buf)
@@ -98,7 +108,7 @@ function! jqplay#start(mods, args) abort
 
     if !empty(s:get('autocmds'))
         let events = join(s:get('autocmds'), ',')
-        if !null_input
+        if !null_input || (null_input && raw_input)
             execute printf('autocmd jqplay %s <buffer> call s:input_changed()', events)
         endif
         execute printf('autocmd jqplay %s <buffer=%d> call s:filter_changed()', events, jqfilter_buf)
@@ -111,9 +121,13 @@ function! jqplay#start(mods, args) abort
 endfunction
 
 function! jqplay#scratch(mods, args)
-    if a:args !~# '-\a*n\a*\>\|--null-input\>'
-        tab new
-        setlocal buflisted buftype=nofile bufhidden=hide noswapfile filetype=json
+    let null_input = a:args =~# '-\a*n\a*\>\|--null-input\>' ? 1 : 0
+    let raw_input = a:args =~# '-\a*R\a*\>\|--raw-input\>' ? 1 : 0
+
+    if (!null_input || (null_input && raw_input)) && !s:jqplay_open
+        tabnew
+        setlocal buflisted buftype=nofile bufhidden=hide noswapfile
+        call setbufvar('%', '&filetype', raw_input ? '' : 'json')
     endif
     call jqplay#start(a:mods, a:args)
 endfunction

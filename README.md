@@ -19,8 +19,8 @@ whenever the input buffer or the jq filter buffer are modified similar to
 
 | Command                   | Description                                                         |
 | ------------------------- | ------------------------------------------------------------------- |
-| `:Jqplay [{args}]`        | Start an interactive session using the current json buffer and the jq options `{args}`.|
-| `:JqplayScratch [{args}]` | Like `:Jqplay` but use a new json scratch buffer as input.          |
+| `:Jqplay [{args}]`        | Start an interactive session using the current buffer and the jq options `{args}`.|
+| `:JqplayScratch [{args}]` | Like `:Jqplay` but use a new scratch buffer as input.               |
 | `:Jqrun [{args}]`         | Invoke jq manually with the jq options `{args}`.                    |
 | `:JqplayClose`            | Stop the _jqplay_ session.                                          |
 | `:JqplayClose!`           | Stop the _jqplay_ session and delete all associated scratch buffers.|
@@ -41,9 +41,12 @@ buffer are modified. By default `jq` is invoked when the `InsertLeave` or
 `TextChanged` events are triggered. See [configuration](#configuration) below on
 how to change the list of events.
 
-**Note:** `:Jqplay` is available only for json buffers. If you want to start a
-_jqplay_ session from anywhere, run `:JqplayScratch`. The command will open an
-interactive session in a new tab page using a new json scratch buffer as input.
+**Note:** `:Jqplay` can be run only on json buffers, unless the
+`-n`/`--null-input` and/or `-R`/`--raw-input` options have been passed.
+
+If you want to start a _jqplay_ session with a new input buffer, run
+`:JqplayScratch`. The command will open an interactive session in a new tab page
+using a new json scratch buffer as input.
 
 ### Run jq manually on demand
 
@@ -59,7 +62,7 @@ Alternatively, if you don't want to run `jq` interactively on every buffer
 change, disable all autocommands and use `:Jqrun` instead.
 
 **Note:** The command is available only after starting a _jqplay_ session with
-`:Jqplay`, and is deleted after the session is closed.
+`:Jqplay` or `:JqplayScratch`, and is deleted after the session is closed.
 
 ### Close jqplay or stop a jq process
 
