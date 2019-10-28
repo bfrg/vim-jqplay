@@ -51,7 +51,7 @@ function! s:jqcmd(exe, opts, args, file) abort
 endfunction
 
 function! jqplay#start(mods, args) abort
-    if a:args =~# '-f\>\|--from-file\>'
+    if a:args =~# '-\a*f\>\|--from-file\>'
         return s:error('jqplay: -f and --from-file options not allowed')
     endif
 
@@ -60,7 +60,7 @@ function! jqplay#start(mods, args) abort
     endif
 
     " If -n/--null-input is passed we won't need an input buffer for jq
-    let null_input = a:args =~# '-n\|--null-input' ? 1 : 0
+    let null_input = a:args =~# '-\a*n\a*\>\|--null-input\>' ? 1 : 0
 
     let in_buf = bufnr('%')
     let jqfilter_name = 'jq-filter://' . (null_input ? '' : expand('%'))
@@ -111,7 +111,7 @@ function! jqplay#start(mods, args) abort
 endfunction
 
 function! jqplay#scratch(mods, args)
-    if a:args !~# '-n\>\|--null-input\>'
+    if a:args !~# '-\a*n\a*\>\|--null-input\>'
         tab new
         setlocal buflisted buftype=nofile bufhidden=hide noswapfile filetype=json
     endif
@@ -145,7 +145,7 @@ function! jqplay#close(bang) abort
 endfunction
 
 function! s:run_manually(bang, args) abort
-    if a:args =~# '-f\>\|--from-file\>'
+    if a:args =~# '-\a*f\>\|--from-file\>'
         return s:error('jqplay: -f and --from-file options not allowed')
     endif
 
