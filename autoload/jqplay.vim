@@ -50,7 +50,7 @@ function! s:jqcmd(exe, opts, args, file) abort
     return printf('%s %s %s -f %s', a:exe, a:opts, a:args, a:file)
 endfunction
 
-function! jqplay#scratch(mods, args) abort
+function! jqplay#start(mods, args) abort
     if a:args =~# '-\a*f\>\|--from-file\>'
         return s:error('jqplay: -f and --from-file options not allowed')
     endif
