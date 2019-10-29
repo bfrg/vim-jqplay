@@ -20,7 +20,8 @@ whenever the input buffer or the jq filter buffer are modified similar to
 | Command                   | Description                                                         |
 | ------------------------- | ------------------------------------------------------------------- |
 | `:Jqplay [{args}]`        | Start an interactive session using the current json buffer and the jq options `{args}`.|
-| `:JqplayScratch [{args}]` | Like `:Jqplay` but create a new scratch buffer and use it as input. |
+| `:JqplayScratch [{args}]` | Like `:Jqplay` but creates a new scratch buffer as input.           |
+| `:JqplayScratch! [{args}]`| Like `:JqplayScratch` but forces `--null-input` and doesn't pass any input to `jq`.|
 | `:Jqrun [{args}]`         | Invoke jq manually with the jq options `{args}`.                    |
 | `:JqplayClose`            | Stop the _jqplay_ session.                                          |
 | `:JqplayClose!`           | Stop the _jqplay_ session and delete all associated scratch buffers.|
@@ -34,19 +35,22 @@ Running `:Jqplay {args}` on the current json buffer opens two new windows:
 2. The second window displays the `jq` output (prefixed with `jq-output://`).
 
 `{args}` can be any `jq` command-line arguments as you would write them in the
-shell (except for the `-f` and `--from-file` options and the filter).
+shell (except for the `-f/--from-file` option and the filter).
 
-Jq will run automatically whenever the json input buffer or the `jq` filter
-buffer are modified. By default `jq` is invoked when the `InsertLeave` or
-`TextChanged` events are triggered. See `:help jqplay-config` or
-[configuration](#configuration) below on how to change the list of events.
+Jq will run automatically whenever the input buffer or the `jq` filter buffer
+are modified. By default `jq` is invoked when the `InsertLeave` or `TextChanged`
+events are triggered. See [configuration](#configuration) below on how to change
+the list of events.
 
 **Note:** `:Jqplay` can be run only on json buffers, unless the
 `-n/--null-input` and/or `-R/--raw-input` options have been passed.
 
 If you want to start a _jqplay_ session with a new input buffer, run
 `:JqplayScratch`. The command will open an interactive session in a new tab page
-using a new scratch buffer as input.
+using a new scratch buffer as input. Running `:JqplayScratch!` with a bang will
+force the `-n/--null-input` option and open an interactive session without using
+any source buffer. This is useful when you don't need any input to be passed to
+`jq`.
 
 ### Run jq manually on demand
 
@@ -77,13 +81,9 @@ any time with `:Jqstop`.
 
 ## Configuration
 
-Options are set in either the buffer-local dictionary `b:jqplay`, or the
-global dictionary `g:jqplay`.
-
-**Note:** The buffer-variable `b:jqplay` needs to be specified for `json`
-filetypes, for example, in `after/ftplugin/json.vim`
-
-The following entries can be set:
+Options are set in either the buffer-local dictionary `b:jqplay` (specified for
+`json` filetypes), or the global dictionary `g:jqplay`. The following entries
+can be set:
 
 | Key        | Description                 | Default                          |
 | ---------- | --------------------------- | -------------------------------- |
@@ -93,8 +93,6 @@ The following entries can be set:
 
 If you don't want to run `jq` interactively on every buffer change, set
 `autocmds` to an empty list and run `:Jqrun` manually.
-
-See `:help jqplay-config` for more details.
 
 
 ## Examples
