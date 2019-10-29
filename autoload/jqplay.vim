@@ -106,6 +106,16 @@ function! jqplay#start(mods, args) abort
     let s:jqplay_open = 1
 endfunction
 
+function! jqplay#scratch(mods, args)
+    let raw_input = a:args =~# '-\a*R\a*\>\|--raw-input\>' ? 1 : 0
+    if !s:jqplay_open
+        tabnew
+        setlocal buflisted buftype=nofile bufhidden=hide noswapfile
+        call setbufvar('%', '&filetype', raw_input ? '' : 'json')
+    endif
+    call jqplay#start(a:mods, a:args)
+endfunction
+
 function! jqplay#ctx() abort
     return s:jqplay_open ? s:jq_ctx : {}
 endfunction

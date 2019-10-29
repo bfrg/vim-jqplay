@@ -47,6 +47,10 @@ Commands ~
             be changed with the "autocmds" option, see |jqplay-autocmds|
             below.
 
+            Note: ":Jqplay {args}" can be run only on json buffers, unless the
+            -n/--null-input and/or -R/--raw-input options have been specified
+            in {args}.
+
 :JqplayClose[!]                                          *jqplay-:JqplayClose*
             Close the interactive jqplay session. This will delete all
             autocommands that are invoking jq on buffer change.
@@ -77,6 +81,13 @@ Commands ~
             |jqplay-:Jqplay| or |jqplay-:Jqrun|. When {how} is omitted, the
             job will be terminated. See |job_stop()| for more details on the
             {how} values.
+
+:JqplayScratch [{args}]                                *jqplay-:JqplayScratch*
+            Like |jqplay-:Jqplay| but start an interactive session in a new
+            |tab| page with a new scratch buffer as input for jq.
+
+            The scratch buffer is always passed to jq as stdin, even when the
+            -n/--null-input options have been specified in {args}.
 
 Functions ~
 
@@ -142,22 +153,6 @@ Examples ~
 
 ==============================================================================
 FAQ                                                               *jqplay-faq*
-
-E492: Not an editor command: Jqplay ~
-
-|jqplay:Jqplay| is a buffer-local command available only in json buffers.
-If you want to start a jqplay session from anywhere, add the following to your
-|vimrc|:
->
-    command! -nargs=? -complete=customlist,jqplay#complete JqplayScratch
-            \ enew |
-            \ setlocal buflisted buftype=nofile bufhidden=hide |
-            \ setlocal noswapfile filetype=json |
-            \ <mods> Jqplay <args>
-
-You can precede ":JqplayScratch" with a command modifier. For example,
-":vert JqplayScratch {args}" opens the "jq-output://" buffer in a new vertical
-split.
 
 How can I override buffer settings of jq-output:// buffers? ~
 

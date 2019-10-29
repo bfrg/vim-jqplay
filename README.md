@@ -17,12 +17,14 @@ whenever the input buffer or the jq filter buffer are modified similar to
 
 ### Quick Overview
 
-| Command             | Description                                                         |
-| ------------------- | ------------------------------------------------------------------- |
-| `:Jqplay [{args}]`  | Start an interactive session using the current buffer and the jq options `{args}`.|
-| `:Jqrun [{args}]`   | Invoke jq manually with the jq options `{args}`.                    |
-| `:JqplayClose`      | Close the _jqplay_ session.                                         |
-| `:Jqstop`           | Terminate a running jq process.                                     |
+| Command                   | Description                                                         |
+| ------------------------- | ------------------------------------------------------------------- |
+| `:Jqplay [{args}]`        | Start an interactive session using the current json buffer and the jq options `{args}`.|
+| `:JqplayScratch [{args}]` | Like `:Jqplay` but create a new scratch buffer and use it as input. |
+| `:Jqrun [{args}]`         | Invoke jq manually with the jq options `{args}`.                    |
+| `:JqplayClose`            | Stop the _jqplay_ session.                                          |
+| `:JqplayClose!`           | Stop the _jqplay_ session and delete all associated scratch buffers.|
+| `:Jqstop`                 | Terminate a running jq process.                                     |
 
 ### Run jq automatically whenever input or filter buffer are modified
 
@@ -41,6 +43,10 @@ buffer are modified. By default `jq` is invoked when the `InsertLeave` or
 
 **Note:** `:Jqplay` can be run only on json buffers, unless the
 `-n/--null-input` and/or `-R/--raw-input` options have been passed.
+
+If you want to start a _jqplay_ session with a new input buffer, run
+`:JqplayScratch`. The command will open an interactive session in a new tab page
+using a new scratch buffer as input.
 
 ### Run jq manually on demand
 
@@ -115,19 +121,6 @@ Instead invoke `jq` manually with `:Jqrun`:
 " in after/ftplugin/json.vim
 let b:jqplay = { 'opts': '--tab', 'autocmds': [] }
 ```
-
-#### Example 3: `:JqplayScratch`
-
-`:Jqplay` is a buffer-local command available only in `json` buffers. If you
-want to start a _jqplay_ session from anywhere, add the following to your
-`vimrc`:
-```vim
-command! -nargs=? -complete=customlist,jqplay#complete JqplayScratch enew |
-        \ setlocal buflisted buftype=nofile bufhidden=hide noswapfile filetype=json |
-        \ <mods> Jqplay <args>
-```
-You can precede `:JqplayScratch` with a command modifier. For example, `:vert
-JqplayScratch {args}` opens the `jq-output://` buffer in a new vertical split.
 
 
 ## Installation
