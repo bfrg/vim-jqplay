@@ -19,7 +19,7 @@ whenever the input buffer or the jq filter buffer are modified similar to
 
 | Command             | Description                                                         |
 | ------------------- | ------------------------------------------------------------------- |
-| `:Jqplay [{args}]`  | Start an interactive _jqplay_ session using the jq options `{args}`.|
+| `:Jqplay [{args}]`  | Start an interactive session using the current buffer and the jq options `{args}`.|
 | `:Jqrun [{args}]`   | Invoke jq manually with the jq options `{args}`.                    |
 | `:JqplayClose`      | Close the _jqplay_ session.                                         |
 | `:Jqstop`           | Terminate a running jq process.                                     |
@@ -39,12 +39,15 @@ buffer are modified. By default `jq` is invoked when the `InsertLeave` or
 `TextChanged` events are triggered. See `:help jqplay-config` or
 [configuration](#configuration) below on how to change the list of events.
 
+**Note:** `:Jqplay` can be run only on json buffers, unless the
+`-n/--null-input` and/or `-R/--raw-input` options have been passed.
+
 ### Run jq manually on demand
 
 Use `:Jqrun {args}` at any time to invoke `jq` manually with the `jq` arguments
 `{args}` and the current `jq-filter://` buffer. This will temporarily override
 the `jq` options previously set with `:Jqplay {args}`. Add a bang to `:Jqrun!`
-to permanently override the options for the `jq` buffer.
+to permanently override the options for the `jq-filter://` buffer.
 
 `:Jqrun` is useful to quickly run the same `jq` script with different set of
 `jq` arguments.
@@ -57,7 +60,7 @@ change, disable all autocommands and use `:Jqrun` instead.
 
 ### Close jqplay or stop a jq process
 
-Running `:JqplayClose` will stop the interactive session. The `jq` scratch
+Running `:JqplayClose` will stop the interactive session. The `jq` filter
 buffer and the output buffer will be kept open. Run `:JqplayClose!` with a bang
 to stop the session and also delete the buffers. Think of `:JqplayClose!` as _I
 am done, close everything!_

@@ -19,9 +19,9 @@ Commands ~
 
 :Jqplay [{args}]                                              *jqplay-:Jqplay*
             Open a new jq scratch buffer and apply the entered jq filter to
-            the current json buffer. The output is displayed in a new |:split|
-            window, and updated interactively when both the jq buffer or the
-            input buffer are modified.
+            the current buffer. The output is displayed in a new |:split|
+            window, and updated interactively when both the filter buffer or
+            the input buffer are modified.
 
             {args} can be any jq command-line arguments as you would write
             them in the shell, except for the "-f" or "--from-file" options.
@@ -51,7 +51,7 @@ Commands ~
             Close the interactive jqplay session. This will delete all
             autocommands that are invoking jq on buffer change.
 
-            Without the [!] all buffers are kept open. Adding a [!] will also
+            Without the [!] all buffers are kept open. Adding [!] will also
             |:bdelete| the jq filter and output buffers. If the input buffer
             is a scratch buffer ('buftype' is "nofile") it will be deleted as
             well. Think of ":JqplayClose!" as "I am done, close everything".
@@ -87,7 +87,7 @@ jqplay#jq_job()                                              *jqplay#jq_job()*
 
 jqplay#ctx()                                                    *jqplay#ctx()*
             Returns a jqplay context |Dictionary| that is used internally
-            during a jqplay session. Only useful for debugging.
+            during a jqplay session. Useful for debugging.
 
 ==============================================================================
 CONFIGURATION                                                  *jqplay-config*
@@ -172,7 +172,6 @@ Option 1, use |autocommands|:
             \ endif
     augroup END
 <
-
 Option 2, use a |ftplugin| file:
 >
     " in after/ftplugin/json.vim
@@ -180,5 +179,4 @@ Option 2, use a |ftplugin| file:
         setlocal wincolor=NormalNC
     endif
 <
-
  vim:tw=78:et:ft=help:norl:

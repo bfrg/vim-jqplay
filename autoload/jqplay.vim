@@ -30,6 +30,8 @@ function! s:error(msg) abort
 endfunction
 
 function! s:new_scratch(bufname, filetype, mods, ...) abort
+    " FIXME when jq-filter://foo.json is listed, bufnr('jq-filter://', 1) will
+    " return bufnr of that buffer and won't create a new one!
     let bufnr = bufnr(a:bufname, 1)
 
     if bufwinnr(bufnr) == -1
@@ -57,6 +59,12 @@ function! jqplay#start(mods, args) abort
 
     if s:jqplay_open
         return s:error('jqplay: only one session per Vim instance allowed')
+    endif
+
+    let null_input = a:args =~# '-\a*n\a*\>\|--null-input\>' ? 1 : 0
+    let raw_input = a:args =~# '-\a*R\a*\>\|--raw-input\>' ? 1 : 0
+    if !raw_input && !null_input && &filetype !=# 'json'
+        return s:error('jqplay: current buffer must be json, unless -n and/or -R are used')
     endif
 
     let in_buf = bufnr('%')
