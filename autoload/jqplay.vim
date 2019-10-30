@@ -29,22 +29,32 @@ function! s:error(msg) abort
     return 0
 endfunction
 
-function! s:new_scratch(bufname, filetype, mods, ...) abort
-    " FIXME when jq-filter://foo.json is listed, bufnr('jq-filter://', 1) will
-    " return bufnr of that buffer and won't create a new one!
-    let bufnr = bufnr(a:bufname, 1)
+function! s:new_scratch(bufname, filetype, clean, mods, ...) abort
+    let winid = win_getid()
 
-    if bufwinnr(bufnr) == -1
-        silent execute a:mods 'keepalt sbuffer' bufnr
-        setlocal noswapfile buflisted buftype=nofile bufhidden=hide
+    if bufexists(a:bufname)
+        let bufnr = bufnr(a:bufname)
         call setbufvar(bufnr, '&filetype', a:filetype)
-        if a:0
-            execute 'resize' a:1
+        if a:clean
+            silent call deletebufline(bufnr, 1, '$')
         endif
-        wincmd p
+
+        if bufwinnr(bufnr) > 0
+            return bufnr
+        else
+            silent execute a:mods 'keepalt sbuffer' bufnr
+        endif
+    else
+        silent execute a:mods 'keepalt new' fnameescape(a:bufname)
+        setlocal noswapfile buflisted buftype=nofile bufhidden=hide
+        let bufnr = bufnr('%')
+        call setbufvar(bufnr, '&filetype', a:filetype)
     endif
 
-    silent call deletebufline(bufnr, 1, '$')
+    if a:0
+        execute 'resize' a:1
+    endif
+    call win_gotoid(winid)
     return bufnr
 endfunction
 
@@ -65,24 +75,24 @@ function! jqplay#start(mods, args, in_buf) abort
     let join_output = a:args =~# '-\a*j\a*\>\|--join-output\>' ? 1 : 0
     let out_ft = raw_output || join_output ? '' : 'json'
     let out_name = 'jq-output://' . (a:in_buf == -1 ? '' : bufname(a:in_buf))
-    let out_buf = s:new_scratch(out_name, out_ft, a:mods)
-    let jqfilter_name = 'jq-filter://' . (a:in_buf == -1 ? '' : bufname(a:in_buf))
-    let jqfilter_buf = s:new_scratch(jqfilter_name, 'jq', 'botright', 10)
-    let jqfilter_file = tempname()
-    let jq_cmd = s:jqcmd(s:get('exe'), s:get('opts'), a:args, jqfilter_file)
+    let out_buf = s:new_scratch(out_name, out_ft, 1, a:mods)
+    let filter_name = 'jq-filter://' . (a:in_buf == -1 ? '' : bufname(a:in_buf))
+    let filter_buf = s:new_scratch(filter_name, 'jq', 0, 'botright', 10)
+    let filter_file = tempname()
+    let jq_cmd = s:jqcmd(s:get('exe'), s:get('opts'), a:args, filter_file)
 
     let s:jq_ctx = {
             \ 'in_buf': a:in_buf,
             \ 'out_buf': out_buf,
-            \ 'filter_buf': jqfilter_buf,
-            \ 'filter_file': jqfilter_file,
+            \ 'filter_buf': filter_buf,
+            \ 'filter_file': filter_file,
             \ 'cmd': jq_cmd
             \ }
 
     if a:in_buf != -1
         call setbufvar(a:in_buf, 'jq_changedtick', getbufvar(a:in_buf, 'changedtick'))
     endif
-    call setbufvar(jqfilter_buf, 'jq_changedtick', getbufvar(jqfilter_buf, 'changedtick'))
+    call setbufvar(filter_buf, 'jq_changedtick', getbufvar(filter_buf, 'changedtick'))
 
     augroup jqplay
         autocmd!
@@ -90,7 +100,7 @@ function! jqplay#start(mods, args, in_buf) abort
             execute printf('autocmd BufDelete,BufWipeout <buffer=%d> call jqplay#close(0)', a:in_buf)
         endif
         execute printf('autocmd BufDelete,BufWipeout <buffer=%d> call jqplay#close(0)', out_buf)
-        execute printf('autocmd BufDelete,BufWipeout <buffer=%d> call jqplay#close(0)', jqfilter_buf)
+        execute printf('autocmd BufDelete,BufWipeout <buffer=%d> call jqplay#close(0)', filter_buf)
     augroup END
 
     if !empty(s:get('autocmds'))
@@ -98,7 +108,7 @@ function! jqplay#start(mods, args, in_buf) abort
         if a:in_buf != -1
             execute printf('autocmd jqplay %s <buffer> call s:input_changed()', events)
         endif
-        execute printf('autocmd jqplay %s <buffer=%d> call s:filter_changed()', events, jqfilter_buf)
+        execute printf('autocmd jqplay %s <buffer=%d> call s:filter_changed()', events, filter_buf)
     endif
 
     execute 'command! -bar -bang JqplayClose call jqplay#close(<bang>0)'
