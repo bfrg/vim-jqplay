@@ -115,6 +115,10 @@ function! jqplay#scratch(bang, mods, args)
     let raw_input = a:args =~# '-\a*R\a*\>\|--raw-input\>' ? 1 : 0
     let null_input = a:args =~# '-\a*n\a*\>\|--null-input\>' ? 1 : 0
 
+    if a:bang && raw_input && null_input
+        return s:error('jqplay: not possible to run :JqplayScratch! with -n and -R')
+    endif
+
     if !s:jqplay_open && !a:bang
         tabnew
         setlocal buflisted buftype=nofile bufhidden=hide noswapfile
