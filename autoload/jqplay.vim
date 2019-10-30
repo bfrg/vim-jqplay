@@ -107,7 +107,7 @@ function! jqplay#start(mods, args, in_buf) abort
     let s:jqplay_open = 1
 endfunction
 
-function! jqplay#scratch(bang, mods, args)
+function! jqplay#scratch(bang, mods, args) abort
     let raw_input = a:args =~# '-\a*R\a*\>\|--raw-input\>' ? 1 : 0
     let null_input = a:args =~# '-\a*n\a*\>\|--null-input\>' ? 1 : 0
 
