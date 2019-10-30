@@ -47,10 +47,6 @@ Commands ~
             be changed with the "autocmds" option, see |jqplay-autocmds|
             below.
 
-            Note: ":Jqplay {args}" can be run only on json buffers, unless the
-            -n/--null-input and/or -R/--raw-input options have been specified
-            in {args}.
-
 :JqplayClose[!]                                          *jqplay-:JqplayClose*
             Close the interactive jqplay session. This will delete all
             autocommands that are invoking jq on buffer change.

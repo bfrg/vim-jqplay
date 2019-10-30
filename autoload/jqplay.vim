@@ -3,7 +3,7 @@
 " File:         autoload/jqplay.vim
 " Author:       bfrg <https://github.com/bfrg>
 " Website:      https://github.com/bfrg/vim-jqplay
-" Last Change:  Oct 29, 2019
+" Last Change:  Oct 30, 2019
 " License:      Same as Vim itself (see :h license)
 " ==============================================================================
 
@@ -61,15 +61,11 @@ function! jqplay#start(mods, args, in_buf) abort
         return s:error('jqplay: only one session per Vim instance allowed')
     endif
 
-    let null_input = a:args =~# '-\a*n\a*\>\|--null-input\>' ? 1 : 0
-    let raw_input = a:args =~# '-\a*R\a*\>\|--raw-input\>' ? 1 : 0
-
-    if !raw_input && !null_input && getbufvar(a:in_buf, '&filetype') !=# 'json'
-        return s:error('jqplay: current buffer must be json, unless -n and/or -R are used')
-    endif
-
+    let raw_output = a:args =~# '-\a*r\a*\>\|--raw-output\>' ? 1 : 0
+    let join_output = a:args =~# '-\a*j\a*\>\|--join-output\>' ? 1 : 0
+    let out_ft = raw_output || join_output ? '' : 'json'
     let out_name = 'jq-output://' . (a:in_buf == -1 ? '' : bufname(a:in_buf))
-    let out_buf = s:new_scratch(out_name, 'json', a:mods)
+    let out_buf = s:new_scratch(out_name, out_ft, a:mods)
     let jqfilter_name = 'jq-filter://' . (a:in_buf == -1 ? '' : bufname(a:in_buf))
     let jqfilter_buf = s:new_scratch(jqfilter_name, 'jq', 'botright', 10)
     let jqfilter_file = tempname()
