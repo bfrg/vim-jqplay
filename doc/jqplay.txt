@@ -78,12 +78,15 @@ Commands ~
             job will be terminated. See |job_stop()| for more details on the
             {how} values.
 
-:JqplayScratch [{args}]                                *jqplay-:JqplayScratch*
+:JqplayScratch[!] [{args}]                             *jqplay-:JqplayScratch*
             Like |jqplay-:Jqplay| but start an interactive session in a new
-            |tab| page with a new scratch buffer as input for jq.
+            |tab| page using a new scratch buffer as input for jq.
 
             The scratch buffer is always passed to jq as stdin, even when the
             -n/--null-input options have been specified in {args}.
+
+            Adding [!] will create an interactive session without any input
+            buffer and force the --null-input option.
 
 Functions ~
 

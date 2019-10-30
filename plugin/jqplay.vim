@@ -15,8 +15,8 @@ let g:loaded_jqplay = 1
 let s:cpo_save = &cpoptions
 set cpoptions&vim
 
-command! -nargs=? -complete=customlist,jqplay#complete Jqplay call jqplay#start(<q-mods>, <q-args>)
-command! -nargs=? -complete=customlist,jqplay#complete JqplayScratch call jqplay#scratch(<q-mods>, <q-args>)
+command! -nargs=? -complete=customlist,jqplay#complete Jqplay call jqplay#start(<q-mods>, <q-args>, bufnr('%'))
+command! -bang -nargs=? -complete=customlist,jqplay#complete JqplayScratch call jqplay#scratch(<bang>0, <q-mods>, <q-args>)
 
 let &cpoptions = s:cpo_save
 unlet s:cpo_save
