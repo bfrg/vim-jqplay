@@ -61,9 +61,12 @@ function! jqplay#start(mods, args) abort
         return s:error('jqplay: only one session per Vim instance allowed')
     endif
 
+    let raw_output = a:args =~# '-\a*r\a*\>\|--raw-output\>' ? 1 : 0
+    let join_output = a:args =~# '-\a*j\a*\>\|--join-output\>' ? 1 : 0
+    let out_ft = raw_output || join_output ? '' : 'json'
     let in_buf = bufnr('%')
     let out_name = 'jq-output://' . expand('%')
-    let out_buf = s:new_scratch(out_name, 'json', a:mods)
+    let out_buf = s:new_scratch(out_name, out_ft, a:mods)
     let jqfilter_name = 'jq-filter://' . expand('%')
     let jqfilter_buf = s:new_scratch(jqfilter_name, 'jq', 'botright', 10)
     let jqfilter_file = tempname()
