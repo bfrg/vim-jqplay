@@ -230,8 +230,6 @@ function! s:jq_job(jq_ctx, close_cb) abort
     endif
 
     " https://github.com/vim/vim/issues/4688
-    " E631: write_buf_line(): write failed
-    " This occurs only for large files
     try
         let s:job = job_start([&shell, &shellcmdflag, a:jq_ctx.cmd], opts)
     catch /^Vim\%((\a\+)\)\=:E631:/
@@ -258,9 +256,9 @@ function! jqplay#complete(arglead, cmdline, cursorpos) abort
                 \ '--args', '--ascii-output', '--exit-status', '--from-file',
                 \ '--color-output', '--compact-output', '--help', '--indent',
                 \ '--join-output', '--jsonargs', '--monochrome-output',
-                \ '--null-input', '--raw-input', '--raw-output', '--run-tests',
-                \ '--seq', '--slurp', '--slurpfile', '--sort-keys', '--stream',
-                \ '--tab', '--unbuffered']),
+                \ '--null-input', '--raw-input', '--raw-output', '--rawfile',
+                \ '--run-tests', '--seq', '--slurp', '--slurpfile', '--sort-keys',
+                \ '--stream', '--tab', '--unbuffered']),
                 \ 'stridx(v:val, a:arglead) == 0')
     else
         return map(getcompletion(a:arglead, 'file'), 'fnameescape(v:val)')
