@@ -41,9 +41,6 @@ buffer are modified. By default `jq` is invoked when the `InsertLeave` or
 `TextChanged` events are triggered. See `:help jqplay-config` or
 [configuration](#configuration) below on how to change the list of events.
 
-**Note:** `:Jqplay` can be run only on json buffers, unless the
-`-n/--null-input` and/or `-R/--raw-input` options have been passed.
-
 If you want to start a _jqplay_ session with a new input buffer, run
 `:JqplayScratch`. The command will open an interactive session in a new tab page
 using a new scratch buffer as input.

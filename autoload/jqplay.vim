@@ -3,7 +3,7 @@
 " File:         autoload/jqplay.vim
 " Author:       bfrg <https://github.com/bfrg>
 " Website:      https://github.com/bfrg/vim-jqplay
-" Last Change:  Oct 29, 2019
+" Last Change:  Oct 30, 2019
 " License:      Same as Vim itself (see :h license)
 " ==============================================================================
 
@@ -59,12 +59,6 @@ function! jqplay#start(mods, args) abort
 
     if s:jqplay_open
         return s:error('jqplay: only one session per Vim instance allowed')
-    endif
-
-    let null_input = a:args =~# '-\a*n\a*\>\|--null-input\>' ? 1 : 0
-    let raw_input = a:args =~# '-\a*R\a*\>\|--raw-input\>' ? 1 : 0
-    if !raw_input && !null_input && &filetype !=# 'json'
-        return s:error('jqplay: current buffer must be json, unless -n and/or -R are used')
     endif
 
     let in_buf = bufnr('%')
