@@ -140,6 +140,28 @@ function! s:jq_stop(...) abort
     return exists('s:job') ? job_stop(s:job, a:0 ? a:1 : 'term') : ''
 endfunction
 
+function! s:jq_close(bang) abort
+    if !s:jqplay_open && !(exists('#jqplay#BufDelete') || exists('#jqplay#BufWipeout'))
+        return
+    endif
+    call s:jq_stop()
+    autocmd! jqplay
+
+    if a:bang
+        execute 'bdelete' s:jq_ctx.filter_buf
+        execute 'bdelete' s:jq_ctx.out_buf
+        if s:jq_ctx.in_buf != -1 && getbufvar(s:jq_ctx.in_buf, '&buftype') ==# 'nofile'
+            execute 'bdelete' s:jq_ctx.in_buf
+        endif
+    endif
+
+    delcommand JqplayClose
+    delcommand Jqrun
+    delcommand Jqstop
+    let s:jqplay_open = 0
+    echohl WarningMsg | echomsg 'jqplay session closed' | echohl None
+endfunction
+
 function! jqplay#start(mods, args, in_buf) abort
     if a:args =~# '-\a*f\>\|--from-file\>'
         return s:error('jqplay: -f and --from-file options not allowed')
@@ -182,10 +204,10 @@ function! jqplay#start(mods, args, in_buf) abort
     augroup jqplay
         autocmd!
         if a:in_buf != -1
-            execute printf('autocmd BufDelete,BufWipeout <buffer=%d> call jqplay#close(0)', a:in_buf)
+            execute printf('autocmd BufDelete,BufWipeout <buffer=%d> call s:jq_close(0)', a:in_buf)
         endif
-        execute printf('autocmd BufDelete,BufWipeout <buffer=%d> call jqplay#close(0)', out_buf)
-        execute printf('autocmd BufDelete,BufWipeout <buffer=%d> call jqplay#close(0)', filter_buf)
+        execute printf('autocmd BufDelete,BufWipeout <buffer=%d> call s:jq_close(0)', out_buf)
+        execute printf('autocmd BufDelete,BufWipeout <buffer=%d> call s:jq_close(0)', filter_buf)
     augroup END
 
     " Run jq interactively when input or filter buffer are modified
@@ -197,7 +219,7 @@ function! jqplay#start(mods, args, in_buf) abort
         execute printf('autocmd jqplay %s <buffer=%d> call s:filter_changed()', events, filter_buf)
     endif
 
-    execute 'command! -bar -bang JqplayClose call jqplay#close(<bang>0)'
+    execute 'command! -bar -bang JqplayClose call s:jq_close(<bang>0)'
     execute 'command! -bar -bang -nargs=? -complete=customlist,jqplay#complete Jqrun call s:run_manually(<bang>0, <q-args>)'
     execute 'command! -nargs=? -complete=custom,jqplay#stopcomplete Jqstop call s:jq_stop(<f-args>)'
     let s:jqplay_open = 1
@@ -226,28 +248,6 @@ function! jqplay#scratch(bang, mods, args) abort
     if a:bang
         close
     endif
-endfunction
-
-function! jqplay#close(bang) abort
-    if !s:jqplay_open && !(exists('#jqplay#BufDelete') || exists('#jqplay#BufWipeout'))
-        return
-    endif
-    call s:jq_stop()
-    autocmd! jqplay
-
-    if a:bang
-        execute 'bdelete' s:jq_ctx.filter_buf
-        execute 'bdelete' s:jq_ctx.out_buf
-        if s:jq_ctx.in_buf != -1 && getbufvar(s:jq_ctx.in_buf, '&buftype') ==# 'nofile'
-            execute 'bdelete' s:jq_ctx.in_buf
-        endif
-    endif
-
-    delcommand JqplayClose
-    delcommand Jqrun
-    delcommand Jqstop
-    let s:jqplay_open = 0
-    echohl WarningMsg | echomsg 'jqplay session closed' | echohl None
 endfunction
 
 function! jqplay#ctx() abort
