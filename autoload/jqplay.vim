@@ -184,9 +184,9 @@ function! s:run_manually(bang, args) abort
         let s:jq_ctx = jq_ctx
     endif
     if in_buf == -1
-        call s:jq_job(s:jq_ctx, function('s:close_cb', [filter_buf]))
+        call s:jq_job(s:jq_ctx, funcref('s:close_cb', [filter_buf]))
     else
-        call s:jq_job(jq_ctx, function('s:close_cb_2', [in_buf, filter_buf]))
+        call s:jq_job(jq_ctx, funcref('s:close_cb_2', [in_buf, filter_buf]))
     endif
 endfunction
 
@@ -196,7 +196,7 @@ function! s:filter_changed() abort
         return
     endif
     call writefile(getbufline(filter_buf, 1, '$'), s:jq_ctx.filter_file)
-    call s:jq_job(s:jq_ctx, function('s:close_cb', [filter_buf]))
+    call s:jq_job(s:jq_ctx, funcref('s:close_cb', [filter_buf]))
 endfunction
 
 function! s:input_changed() abort
@@ -204,7 +204,7 @@ function! s:input_changed() abort
     if getbufvar(in_buf, 'jq_changedtick') == getbufvar(in_buf, 'changedtick')
         return
     endif
-    call s:jq_job(s:jq_ctx, function('s:close_cb', [in_buf]))
+    call s:jq_job(s:jq_ctx, funcref('s:close_cb', [in_buf]))
 endfunction
 
 function! s:close_cb(buf, channel) abort
