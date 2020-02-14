@@ -3,7 +3,7 @@
 " File:         autoload/jqplay.vim
 " Author:       bfrg <https://github.com/bfrg>
 " Website:      https://github.com/bfrg/vim-jqplay
-" Last Change:  Oct 30, 2019
+" Last Change:  Feb 14, 2020
 " License:      Same as Vim itself (see :h license)
 " ==============================================================================
 
@@ -19,10 +19,11 @@ let s:defaults = {
         \ 'autocmds': ['InsertLeave', 'TextChanged']
         \ }
 
-function! s:get(key) abort
-    let jqplay = get(b:, 'jqplay', get(g:, 'jqplay', {}))
-    return has_key(jqplay, a:key) ? get(jqplay, a:key) : get(s:defaults, a:key)
-endfunction
+" Check order: b:jqplay -> g:jqplay -> s:defaults
+let s:get = {k -> get(get(b:, 'jqplay', get(g:, 'jqplay', {})), k, get(s:defaults, k))}
+
+" Helper function to create full jq command
+let s:jqcmd = {exe, opts, args, file -> printf('%s %s %s -f %s', exe, opts, args, file)}
 
 function! s:error(msg) abort
     echohl ErrorMsg | echomsg a:msg | echohl None
@@ -56,10 +57,6 @@ function! s:new_scratch(bufname, filetype, clean, mods, ...) abort
     endif
     call win_gotoid(winid)
     return bufnr
-endfunction
-
-function! s:jqcmd(exe, opts, args, file) abort
-    return printf('%s %s %s -f %s', a:exe, a:opts, a:args, a:file)
 endfunction
 
 function! jqplay#start(mods, args, in_buf) abort
