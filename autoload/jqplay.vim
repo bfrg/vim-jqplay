@@ -58,6 +58,84 @@ function! s:new_scratch(bufname, filetype, clean, mods, ...) abort
     return bufnr
 endfunction
 
+function! s:run_manually(bang, args) abort
+    if a:args =~# '-\a*f\>\|--from-file\>'
+        return s:error('jqplay: -f and --from-file options not allowed')
+    endif
+
+    let in_buf = s:jq_ctx.in_buf
+    let filter_buf = s:jq_ctx.filter_buf
+    let filter_tick = getbufvar(filter_buf, 'jq_changedtick')
+
+    if filter_tick != getbufvar(filter_buf, 'changedtick')
+        call writefile(getbufline(filter_buf, 1, '$'), s:jq_ctx.filter_file)
+    endif
+
+    let jq_ctx = copy(s:jq_ctx)
+    let jq_ctx.cmd = s:jqcmd(s:get('exe'), s:get('opts'), a:args, s:jq_ctx.filter_file)
+    if a:bang
+        let s:jq_ctx = jq_ctx
+    endif
+    if in_buf == -1
+        call s:jq_job(s:jq_ctx, funcref('s:close_cb', [filter_buf]))
+    else
+        call s:jq_job(jq_ctx, funcref('s:close_cb_2', [in_buf, filter_buf]))
+    endif
+endfunction
+
+function! s:filter_changed() abort
+    let filter_buf = s:jq_ctx.filter_buf
+    if getbufvar(filter_buf, 'jq_changedtick') == getbufvar(filter_buf, 'changedtick')
+        return
+    endif
+    call writefile(getbufline(filter_buf, 1, '$'), s:jq_ctx.filter_file)
+    call s:jq_job(s:jq_ctx, funcref('s:close_cb', [filter_buf]))
+endfunction
+
+function! s:input_changed() abort
+    let in_buf = s:jq_ctx.in_buf
+    if getbufvar(in_buf, 'jq_changedtick') == getbufvar(in_buf, 'changedtick')
+        return
+    endif
+    call s:jq_job(s:jq_ctx, funcref('s:close_cb', [in_buf]))
+endfunction
+
+function! s:close_cb(buf, channel) abort
+    silent call deletebufline(s:jq_ctx.out_buf, 1)
+    call setbufvar(a:buf, 'jq_changedtick', getbufvar(a:buf, 'changedtick'))
+endfunction
+
+function! s:close_cb_2(buf1, buf2, channel) abort
+    silent call deletebufline(s:jq_ctx.out_buf, 1)
+    call setbufvar(a:buf1, 'jq_changedtick', getbufvar(a:buf1, 'changedtick'))
+    call setbufvar(a:buf2, 'jq_changedtick', getbufvar(a:buf2, 'changedtick'))
+endfunction
+
+function! s:jq_job(jq_ctx, close_cb) abort
+    silent call deletebufline(a:jq_ctx.out_buf, 1, '$')
+
+    if exists('s:job') && job_status(s:job) ==# 'run'
+        call job_stop(s:job)
+    endif
+
+    let opts = {
+            \ 'in_io': 'null',
+            \ 'out_cb': {_,msg -> appendbufline(a:jq_ctx.out_buf, '$', msg)},
+            \ 'err_cb': {_,msg -> appendbufline(a:jq_ctx.out_buf, '$', '// ' .. msg)},
+            \ 'close_cb': a:close_cb
+            \ }
+
+    if a:jq_ctx.in_buf != -1
+        call extend(opts, {'in_io': 'buffer', 'in_buf': a:jq_ctx.in_buf})
+    endif
+
+    " https://github.com/vim/vim/issues/4688
+    try
+        let s:job = job_start([&shell, &shellcmdflag, a:jq_ctx.cmd], opts)
+    catch /^Vim\%((\a\+)\)\=:E631:/
+    endtry
+endfunction
+
 function! jqplay#start(mods, args, in_buf) abort
     if a:args =~# '-\a*f\>\|--from-file\>'
         return s:error('jqplay: -f and --from-file options not allowed')
@@ -146,10 +224,6 @@ function! jqplay#scratch(bang, mods, args) abort
     endif
 endfunction
 
-function! jqplay#ctx() abort
-    return s:jqplay_open ? s:jq_ctx : {}
-endfunction
-
 function! jqplay#close(bang) abort
     if !s:jqplay_open && !(exists('#jqplay#BufDelete') || exists('#jqplay#BufWipeout'))
         return
@@ -172,86 +246,12 @@ function! jqplay#close(bang) abort
     echohl WarningMsg | echomsg 'jqplay session closed' | echohl None
 endfunction
 
-function! s:run_manually(bang, args) abort
-    if a:args =~# '-\a*f\>\|--from-file\>'
-        return s:error('jqplay: -f and --from-file options not allowed')
-    endif
-
-    let in_buf = s:jq_ctx.in_buf
-    let filter_buf = s:jq_ctx.filter_buf
-    let filter_tick = getbufvar(filter_buf, 'jq_changedtick')
-
-    if filter_tick != getbufvar(filter_buf, 'changedtick')
-        call writefile(getbufline(filter_buf, 1, '$'), s:jq_ctx.filter_file)
-    endif
-
-    let jq_ctx = copy(s:jq_ctx)
-    let jq_ctx.cmd = s:jqcmd(s:get('exe'), s:get('opts'), a:args, s:jq_ctx.filter_file)
-    if a:bang
-        let s:jq_ctx = jq_ctx
-    endif
-    if in_buf == -1
-        call s:jq_job(s:jq_ctx, funcref('s:close_cb', [filter_buf]))
-    else
-        call s:jq_job(jq_ctx, funcref('s:close_cb_2', [in_buf, filter_buf]))
-    endif
-endfunction
-
-function! s:filter_changed() abort
-    let filter_buf = s:jq_ctx.filter_buf
-    if getbufvar(filter_buf, 'jq_changedtick') == getbufvar(filter_buf, 'changedtick')
-        return
-    endif
-    call writefile(getbufline(filter_buf, 1, '$'), s:jq_ctx.filter_file)
-    call s:jq_job(s:jq_ctx, funcref('s:close_cb', [filter_buf]))
-endfunction
-
-function! s:input_changed() abort
-    let in_buf = s:jq_ctx.in_buf
-    if getbufvar(in_buf, 'jq_changedtick') == getbufvar(in_buf, 'changedtick')
-        return
-    endif
-    call s:jq_job(s:jq_ctx, funcref('s:close_cb', [in_buf]))
-endfunction
-
-function! s:close_cb(buf, channel) abort
-    silent call deletebufline(s:jq_ctx.out_buf, 1)
-    call setbufvar(a:buf, 'jq_changedtick', getbufvar(a:buf, 'changedtick'))
-endfunction
-
-function! s:close_cb_2(buf1, buf2, channel) abort
-    silent call deletebufline(s:jq_ctx.out_buf, 1)
-    call setbufvar(a:buf1, 'jq_changedtick', getbufvar(a:buf1, 'changedtick'))
-    call setbufvar(a:buf2, 'jq_changedtick', getbufvar(a:buf2, 'changedtick'))
-endfunction
-
-function! s:jq_job(jq_ctx, close_cb) abort
-    silent call deletebufline(a:jq_ctx.out_buf, 1, '$')
-
-    if exists('s:job') && job_status(s:job) ==# 'run'
-        call job_stop(s:job)
-    endif
-
-    let opts = {
-            \ 'in_io': 'null',
-            \ 'out_cb': {_,msg -> appendbufline(a:jq_ctx.out_buf, '$', msg)},
-            \ 'err_cb': {_,msg -> appendbufline(a:jq_ctx.out_buf, '$', '// ' .. msg)},
-            \ 'close_cb': a:close_cb
-            \ }
-
-    if a:jq_ctx.in_buf != -1
-        call extend(opts, {'in_io': 'buffer', 'in_buf': a:jq_ctx.in_buf})
-    endif
-
-    " https://github.com/vim/vim/issues/4688
-    try
-        let s:job = job_start([&shell, &shellcmdflag, a:jq_ctx.cmd], opts)
-    catch /^Vim\%((\a\+)\)\=:E631:/
-    endtry
-endfunction
-
 function! jqplay#stop(...) abort
     return exists('s:job') ? job_stop(s:job, a:0 ? a:1 : 'term') : ''
+endfunction
+
+function! jqplay#ctx() abort
+    return s:jqplay_open ? s:jq_ctx : {}
 endfunction
 
 function! jqplay#jq_job() abort
