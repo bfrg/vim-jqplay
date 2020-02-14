@@ -59,7 +59,7 @@ function! s:new_scratch(bufname, filetype, clean, mods, ...) abort
 endfunction
 
 function! s:run_manually(bang, args) abort
-    if a:args =~# '-\a*f\>\|--from-file\>'
+    if a:args =~# '\v-@1<!-\a*f>|--from-file>'
         return s:error('jqplay: -f and --from-file options not allowed')
     endif
 
@@ -163,7 +163,7 @@ function! s:jq_close(bang) abort
 endfunction
 
 function! jqplay#start(mods, args, in_buf) abort
-    if a:args =~# '-\a*f\>\|--from-file\>'
+    if a:args =~# '\v-@1<!-\a*f>|--from-file>'
         return s:error('jqplay: -f and --from-file options not allowed')
     endif
 
