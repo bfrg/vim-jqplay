@@ -136,6 +136,10 @@ function! s:jq_job(jq_ctx, close_cb) abort
     endtry
 endfunction
 
+function! s:jq_stop(...) abort
+    return exists('s:job') ? job_stop(s:job, a:0 ? a:1 : 'term') : ''
+endfunction
+
 function! jqplay#start(mods, args, in_buf) abort
     if a:args =~# '-\a*f\>\|--from-file\>'
         return s:error('jqplay: -f and --from-file options not allowed')
@@ -195,7 +199,7 @@ function! jqplay#start(mods, args, in_buf) abort
 
     execute 'command! -bar -bang JqplayClose call jqplay#close(<bang>0)'
     execute 'command! -bar -bang -nargs=? -complete=customlist,jqplay#complete Jqrun call s:run_manually(<bang>0, <q-args>)'
-    execute 'command! -nargs=? -complete=custom,jqplay#stopcomplete Jqstop call jqplay#stop(<f-args>)'
+    execute 'command! -nargs=? -complete=custom,jqplay#stopcomplete Jqstop call s:jq_stop(<f-args>)'
     let s:jqplay_open = 1
 endfunction
 
@@ -228,7 +232,7 @@ function! jqplay#close(bang) abort
     if !s:jqplay_open && !(exists('#jqplay#BufDelete') || exists('#jqplay#BufWipeout'))
         return
     endif
-    call jqplay#stop()
+    call s:jq_stop()
     autocmd! jqplay
 
     if a:bang
@@ -244,10 +248,6 @@ function! jqplay#close(bang) abort
     delcommand Jqstop
     let s:jqplay_open = 0
     echohl WarningMsg | echomsg 'jqplay session closed' | echohl None
-endfunction
-
-function! jqplay#stop(...) abort
-    return exists('s:job') ? job_stop(s:job, a:0 ? a:1 : 'term') : ''
 endfunction
 
 function! jqplay#ctx() abort
