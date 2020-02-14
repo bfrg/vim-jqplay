@@ -68,9 +68,7 @@ function! jqplay#start(mods, args, in_buf) abort
     endif
 
     " Check if -r/--raw-output or -j/--join-output options are passed
-    let raw_output = a:args =~# '-\a*r\a*\>\|--raw-output\>' ? 1 : 0
-    let join_output = a:args =~# '-\a*j\a*\>\|--join-output\>' ? 1 : 0
-    let out_ft = raw_output || join_output ? '' : 'json'
+    let out_ft = a:args =~# '\v-@1<!-\a*%(r|j)\a*|--%(raw|join)-output>' ? '' : 'json'
 
     " Output buffer
     let out_name = 'jq-output://' .. (a:in_buf == -1 ? '' : bufname(a:in_buf))
