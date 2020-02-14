@@ -195,7 +195,7 @@ function! jqplay#start(mods, args, in_buf) abort
 
     execute 'command! -bar -bang JqplayClose call jqplay#close(<bang>0)'
     execute 'command! -bar -bang -nargs=? -complete=customlist,jqplay#complete Jqrun call s:run_manually(<bang>0, <q-args>)'
-    execute 'command! -nargs=? -complete=custom,jqplay#stophow Jqstop call jqplay#stop(<f-args>)'
+    execute 'command! -nargs=? -complete=custom,jqplay#stopcomplete Jqstop call jqplay#stop(<f-args>)'
     let s:jqplay_open = 1
 endfunction
 
@@ -258,7 +258,7 @@ function! jqplay#jq_job() abort
     return exists('s:job') ? s:job : ''
 endfunction
 
-function! jqplay#stophow(arglead, cmdline, cursorpos) abort
+function! jqplay#stopcomplete(arglead, cmdline, cursorpos) abort
     return join(['term', 'hup', 'quit', 'int', 'kill'], "\n")
 endfunction
 
