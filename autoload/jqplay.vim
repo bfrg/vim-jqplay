@@ -25,9 +25,8 @@ let s:get = {k -> get(get(b:, 'jqplay', get(g:, 'jqplay', {})), k, get(s:default
 " Helper function to create full jq command
 let s:jqcmd = {exe, opts, args, file -> printf('%s %s %s -f %s', exe, opts, args, file)}
 
-function! s:error(msg) abort
+function! s:error(msg)
     echohl ErrorMsg | echomsg a:msg | echohl None
-    return 0
 endfunction
 
 function! s:new_scratch(bufname, filetype, clean, mods, ...) abort
@@ -68,29 +67,38 @@ function! jqplay#start(mods, args, in_buf) abort
         return s:error('jqplay: only one session per Vim instance allowed')
     endif
 
+    " Check if -r/--raw-output or -j/--join-output options are passed
     let raw_output = a:args =~# '-\a*r\a*\>\|--raw-output\>' ? 1 : 0
     let join_output = a:args =~# '-\a*j\a*\>\|--join-output\>' ? 1 : 0
     let out_ft = raw_output || join_output ? '' : 'json'
-    let out_name = 'jq-output://' . (a:in_buf == -1 ? '' : bufname(a:in_buf))
+
+    " Output buffer
+    let out_name = 'jq-output://' .. (a:in_buf == -1 ? '' : bufname(a:in_buf))
     let out_buf = s:new_scratch(out_name, out_ft, 1, a:mods)
-    let filter_name = 'jq-filter://' . (a:in_buf == -1 ? '' : bufname(a:in_buf))
+
+    " jq filter buffer
+    let filter_name = 'jq-filter://' .. (a:in_buf == -1 ? '' : bufname(a:in_buf))
     let filter_buf = s:new_scratch(filter_name, 'jq', 0, 'botright', 10)
+
+    " Temporary file where jq filter buffer is written to
     let filter_file = tempname()
-    let jq_cmd = s:jqcmd(s:get('exe'), s:get('opts'), a:args, filter_file)
 
     let s:jq_ctx = {
             \ 'in_buf': a:in_buf,
             \ 'out_buf': out_buf,
             \ 'filter_buf': filter_buf,
             \ 'filter_file': filter_file,
-            \ 'cmd': jq_cmd
+            \ 'cmd': s:jqcmd(s:get('exe'), s:get('opts'), a:args, filter_file)
             \ }
 
+    " When a:in_buf is set to -1, no input buffer will be passed to jq
     if a:in_buf != -1
         call setbufvar(a:in_buf, 'jq_changedtick', getbufvar(a:in_buf, 'changedtick'))
     endif
     call setbufvar(filter_buf, 'jq_changedtick', getbufvar(filter_buf, 'changedtick'))
 
+    " When input, output or filter buffer are deleted/wiped out, close the
+    " interactive session
     augroup jqplay
         autocmd!
         if a:in_buf != -1
@@ -100,6 +108,7 @@ function! jqplay#start(mods, args, in_buf) abort
         execute printf('autocmd BufDelete,BufWipeout <buffer=%d> call jqplay#close(0)', filter_buf)
     augroup END
 
+    " Run jq interactively when input or filter buffer are modified
     if !empty(s:get('autocmds'))
         let events = join(s:get('autocmds'), ',')
         if a:in_buf != -1
@@ -130,10 +139,10 @@ function! jqplay#scratch(bang, mods, args) abort
         tab split
     endif
 
-    let args = a:bang && !null_input ? (a:args . ' -n') : a:args
-    let bufnr = a:bang ? -1: bufnr('%')
+    let args = a:bang && !null_input ? (a:args .. ' -n') : a:args
+    let bufnr = a:bang ? -1 : bufnr('%')
     call jqplay#start(a:mods, args, bufnr)
-    " need to close the window that we opened with :tab split
+    " Close the initial window that we opened with :tab split
     if a:bang
         close
     endif
@@ -228,7 +237,7 @@ function! s:jq_job(jq_ctx, close_cb) abort
     let opts = {
             \ 'in_io': 'null',
             \ 'out_cb': {_,msg -> appendbufline(a:jq_ctx.out_buf, '$', msg)},
-            \ 'err_cb': {_,msg -> appendbufline(a:jq_ctx.out_buf, '$', '// ' . msg)},
+            \ 'err_cb': {_,msg -> appendbufline(a:jq_ctx.out_buf, '$', '// ' .. msg)},
             \ 'close_cb': a:close_cb
             \ }
 
