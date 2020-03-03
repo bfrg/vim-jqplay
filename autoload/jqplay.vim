@@ -3,7 +3,7 @@
 " File:         autoload/jqplay.vim
 " Author:       bfrg <https://github.com/bfrg>
 " Website:      https://github.com/bfrg/vim-jqplay
-" Last Change:  Feb 14, 2020
+" Last Change:  Mar 3, 2020
 " License:      Same as Vim itself (see :h license)
 " ==============================================================================
 
@@ -226,6 +226,10 @@ function! jqplay#start(mods, args, in_buf) abort
 endfunction
 
 function! jqplay#scratch(bang, mods, args) abort
+    if s:jqplay_open
+        return s:error('jqplay: only one session per Vim instance allowed')
+    endif
+
     let raw_input = a:args =~# '-\a*R\a*\>\|--raw-input\>' ? 1 : 0
     let null_input = a:args =~# '-\a*n\a*\>\|--null-input\>' ? 1 : 0
 
@@ -233,17 +237,18 @@ function! jqplay#scratch(bang, mods, args) abort
         return s:error('jqplay: not possible to run :JqplayScratch! with -n and -R')
     endif
 
-    if !s:jqplay_open && !a:bang
+    if a:bang
+        tab split
+    else
         tabnew
         setlocal buflisted buftype=nofile bufhidden=hide noswapfile
         call setbufvar('%', '&filetype', raw_input ? '' : 'json')
-    elseif !s:jqplay_open && a:bang
-        tab split
     endif
 
     let args = a:bang && !null_input ? (a:args .. ' -n') : a:args
     let bufnr = a:bang ? -1 : bufnr('%')
     call jqplay#start(a:mods, args, bufnr)
+
     " Close the initial window that we opened with :tab split
     if a:bang
         close
