@@ -230,8 +230,8 @@ function! jqplay#scratch(bang, mods, args) abort
         return s:error('jqplay: only one session per Vim instance allowed')
     endif
 
-    let raw_input = a:args =~# '-\a*R\a*\>\|--raw-input\>' ? 1 : 0
-    let null_input = a:args =~# '-\a*n\a*\>\|--null-input\>' ? 1 : 0
+    let raw_input = a:args =~# '-\@1<!-\a*R\a*\>\|--raw-input\>' ? 1 : 0
+    let null_input = a:args =~# '-\@1<!-\a*n\a*\>\|--null-input\>' ? 1 : 0
 
     if a:bang && raw_input && null_input
         return s:error('jqplay: not possible to run :JqplayScratch! with -n and -R')
