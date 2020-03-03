@@ -148,10 +148,10 @@ function! s:jq_close(bang) abort
     autocmd! jqplay
 
     if a:bang
-        execute 'bdelete' s:jq_ctx.filter_buf
-        execute 'bdelete' s:jq_ctx.out_buf
+        execute 'bwipeout' s:jq_ctx.filter_buf
+        execute 'bwipeout' s:jq_ctx.out_buf
         if s:jq_ctx.in_buf != -1 && getbufvar(s:jq_ctx.in_buf, '&buftype') ==# 'nofile'
-            execute 'bdelete' s:jq_ctx.in_buf
+            execute 'bwipeout' s:jq_ctx.in_buf
         endif
     endif
 
