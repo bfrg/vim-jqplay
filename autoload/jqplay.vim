@@ -229,6 +229,10 @@ function jqplay#scratch(bang, mods, args) abort
         return s:error('jqplay: only one session per Vim instance allowed')
     endif
 
+    if a:args =~# '\v-@1<!-\a*f>|--from-file>'
+        return s:error('jqplay: -f and --from-file options not allowed')
+    endif
+
     let raw_input = a:args =~# '-\@1<!-\a*R\a*\>\|--raw-input\>' ? 1 : 0
     let null_input = a:args =~# '-\@1<!-\a*n\a*\>\|--null-input\>' ? 1 : 0
 
