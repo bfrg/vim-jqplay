@@ -3,14 +3,14 @@
 " File:         autoload/jqplay.vim
 " Author:       bfrg <https://github.com/bfrg>
 " Website:      https://github.com/bfrg/vim-jqplay
-" Last Change:  Mar 3, 2020
+" Last Change:  Jan 25, 2021
 " License:      Same as Vim itself (see :h license)
 " ==============================================================================
 
 let s:save_cpo = &cpoptions
 set cpoptions&vim
 
-" Flag that indicates whether a jqplay session is running
+" Flag used to check if a jqplay session is running
 let s:jqplay_open = 0
 
 let s:defaults = {
@@ -19,8 +19,7 @@ let s:defaults = {
         \ 'autocmds': ['InsertLeave', 'TextChanged']
         \ }
 
-" Check order: b:jqplay -> g:jqplay -> s:defaults
-let s:get = {k -> get(get(b:, 'jqplay', get(g:, 'jqplay', {})), k, get(s:defaults, k))}
+let s:get = {k -> get(g:, 'jqplay', {})->get(k, s:defaults[k])}
 
 " Helper function to create full jq command
 let s:jqcmd = {exe, opts, args, file -> printf('%s %s %s -f %s', exe, opts, args, file)}
