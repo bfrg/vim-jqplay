@@ -24,11 +24,11 @@ let s:get = {k -> get(g:, 'jqplay', {})->get(k, s:defaults[k])}
 " Helper function to create full jq command
 let s:jqcmd = {exe, opts, args, file -> printf('%s %s %s -f %s', exe, opts, args, file)}
 
-function! s:error(msg)
+function s:error(msg)
     echohl ErrorMsg | echomsg a:msg | echohl None
 endfunction
 
-function! s:new_scratch(bufname, filetype, clean, mods, ...) abort
+function s:new_scratch(bufname, filetype, clean, mods, ...) abort
     let winid = win_getid()
 
     if bufexists(a:bufname)
@@ -41,10 +41,10 @@ function! s:new_scratch(bufname, filetype, clean, mods, ...) abort
         if bufwinnr(bufnr) > 0
             return bufnr
         else
-            silent execute a:mods 'keepalt sbuffer' bufnr
+            silent execute a:mods 'sbuffer' bufnr
         endif
     else
-        silent execute a:mods 'keepalt new' fnameescape(a:bufname)
+        silent execute a:mods 'new' fnameescape(a:bufname)
         setlocal noswapfile buflisted buftype=nofile bufhidden=hide
         let bufnr = bufnr('%')
         call setbufvar(bufnr, '&filetype', a:filetype)
@@ -57,7 +57,7 @@ function! s:new_scratch(bufname, filetype, clean, mods, ...) abort
     return bufnr
 endfunction
 
-function! s:run_manually(bang, args) abort
+function s:run_manually(bang, args) abort
     if a:args =~# '\v-@1<!-\a*f>|--from-file>'
         return s:error('jqplay: -f and --from-file options not allowed')
     endif
@@ -82,7 +82,7 @@ function! s:run_manually(bang, args) abort
     endif
 endfunction
 
-function! s:filter_changed() abort
+function s:filter_changed() abort
     let filter_buf = s:jq_ctx.filter_buf
     if getbufvar(filter_buf, 'jq_changedtick') == getbufvar(filter_buf, 'changedtick')
         return
@@ -91,7 +91,7 @@ function! s:filter_changed() abort
     call s:jq_job(s:jq_ctx, funcref('s:close_cb', [filter_buf]))
 endfunction
 
-function! s:input_changed() abort
+function s:input_changed() abort
     let in_buf = s:jq_ctx.in_buf
     if getbufvar(in_buf, 'jq_changedtick') == getbufvar(in_buf, 'changedtick')
         return
@@ -99,18 +99,18 @@ function! s:input_changed() abort
     call s:jq_job(s:jq_ctx, funcref('s:close_cb', [in_buf]))
 endfunction
 
-function! s:close_cb(buf, channel) abort
+function s:close_cb(buf, channel) abort
     silent call deletebufline(s:jq_ctx.out_buf, 1)
     call setbufvar(a:buf, 'jq_changedtick', getbufvar(a:buf, 'changedtick'))
 endfunction
 
-function! s:close_cb_2(buf1, buf2, channel) abort
+function s:close_cb_2(buf1, buf2, channel) abort
     silent call deletebufline(s:jq_ctx.out_buf, 1)
     call setbufvar(a:buf1, 'jq_changedtick', getbufvar(a:buf1, 'changedtick'))
     call setbufvar(a:buf2, 'jq_changedtick', getbufvar(a:buf2, 'changedtick'))
 endfunction
 
-function! s:jq_job(jq_ctx, close_cb) abort
+function s:jq_job(jq_ctx, close_cb) abort
     silent call deletebufline(a:jq_ctx.out_buf, 1, '$')
 
     if exists('s:job') && job_status(s:job) ==# 'run'
@@ -135,11 +135,11 @@ function! s:jq_job(jq_ctx, close_cb) abort
     endtry
 endfunction
 
-function! s:jq_stop(...) abort
+function s:jq_stop(...) abort
     return exists('s:job') ? job_stop(s:job, a:0 ? a:1 : 'term') : ''
 endfunction
 
-function! s:jq_close(bang) abort
+function s:jq_close(bang) abort
     if !s:jqplay_open && !(exists('#jqplay#BufDelete') || exists('#jqplay#BufWipeout'))
         return
     endif
@@ -161,7 +161,7 @@ function! s:jq_close(bang) abort
     echohl WarningMsg | echomsg 'jqplay session closed' | echohl None
 endfunction
 
-function! jqplay#start(mods, args, in_buf) abort
+function jqplay#start(mods, args, in_buf) abort
     if a:args =~# '\v-@1<!-\a*f>|--from-file>'
         return s:error('jqplay: -f and --from-file options not allowed')
     endif
@@ -224,7 +224,7 @@ function! jqplay#start(mods, args, in_buf) abort
     let s:jqplay_open = 1
 endfunction
 
-function! jqplay#scratch(bang, mods, args) abort
+function jqplay#scratch(bang, mods, args) abort
     if s:jqplay_open
         return s:error('jqplay: only one session per Vim instance allowed')
     endif
@@ -254,19 +254,19 @@ function! jqplay#scratch(bang, mods, args) abort
     endif
 endfunction
 
-function! jqplay#ctx() abort
+function jqplay#ctx() abort
     return s:jqplay_open ? s:jq_ctx : {}
 endfunction
 
-function! jqplay#jq_job() abort
+function jqplay#jq_job() abort
     return exists('s:job') ? s:job : ''
 endfunction
 
-function! jqplay#stopcomplete(arglead, cmdline, cursorpos) abort
+function jqplay#stopcomplete(arglead, cmdline, cursorpos) abort
     return join(['term', 'hup', 'quit', 'int', 'kill'], "\n")
 endfunction
 
-function! jqplay#complete(arglead, cmdline, cursorpos) abort
+function jqplay#complete(arglead, cmdline, cursorpos) abort
     if a:arglead[0] ==# '-'
         return filter(
                 \ copy(['-a', '-C', '-c', '-e', '-f', '-h', '-j', '-L', '-M',
