@@ -3,7 +3,7 @@
 " File:         autoload/jqplay.vim
 " Author:       bfrg <https://github.com/bfrg>
 " Website:      https://github.com/bfrg/vim-jqplay
-" Last Change:  Jan 25, 2021
+" Last Change:  Jan 26, 2021
 " License:      Same as Vim itself (see :h license)
 " ==============================================================================
 
@@ -26,6 +26,10 @@ let s:jqcmd = {exe, opts, args, file -> printf('%s %s %s -f %s', exe, opts, args
 
 function s:error(msg)
     echohl ErrorMsg | echomsg a:msg | echohl None
+endfunction
+
+function s:warning(msg)
+    echohl WarningMsg | echomsg a:msg | echohl None
 endfunction
 
 function s:new_scratch(bufname, filetype, clean, mods, ...) abort
@@ -158,7 +162,7 @@ function s:jq_close(bang) abort
     delcommand Jqrun
     delcommand Jqstop
     let s:jqplay_open = 0
-    echohl WarningMsg | echomsg 'jqplay session closed' | echohl None
+    call s:warning('jqplay interactive session closed')
 endfunction
 
 function jqplay#start(mods, args, in_buf) abort
@@ -167,7 +171,7 @@ function jqplay#start(mods, args, in_buf) abort
     endif
 
     if s:jqplay_open
-        return s:error('jqplay: only one session per Vim instance allowed')
+        return s:error('jqplay: only one interactive session allowed')
     endif
 
     " Check if -r/--raw-output or -j/--join-output options are passed
@@ -226,7 +230,7 @@ endfunction
 
 function jqplay#scratch(bang, mods, args) abort
     if s:jqplay_open
-        return s:error('jqplay: only one session per Vim instance allowed')
+        return s:error('jqplay: only one interactive session allowed')
     endif
 
     if a:args =~# '\v-@1<!-\a*f>|--from-file>'
