@@ -3,11 +3,16 @@
 " File:         plugin/jqplay.vim
 " Author:       bfrg <https://github.com/bfrg>
 " Website:      https://github.com/bfrg/vim-jqplay
-" Last Change:  Jan 25, 2021
+" Last Change:  Jan 26, 2021
 " License:      Same as Vim itself (see :h license)
 " ==============================================================================
 
-if exists('g:loaded_jqplay') || !has('patch-8.1.1776')
+if !has('patch-8.1.1776')
+    echoerr 'vim-jqplay requires Vim >= 8.1.1776'
+    finish
+endif
+
+if exists('g:loaded_jqplay')
     finish
 endif
 let g:loaded_jqplay = 1
