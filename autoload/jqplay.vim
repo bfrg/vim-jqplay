@@ -3,7 +3,7 @@
 " File:         autoload/jqplay.vim
 " Author:       bfrg <https://github.com/bfrg>
 " Website:      https://github.com/bfrg/vim-jqplay
-" Last Change:  Jan 26, 2021
+" Last Change:  Jul 24, 2021
 " License:      Same as Vim itself (see :h license)
 " ==============================================================================
 
@@ -106,12 +106,14 @@ endfunction
 function s:close_cb(buf, channel) abort
     silent call deletebufline(s:jq_ctx.out_buf, 1)
     call setbufvar(a:buf, 'jq_changedtick', getbufvar(a:buf, 'changedtick'))
+    redrawstatus!
 endfunction
 
 function s:close_cb_2(buf1, buf2, channel) abort
     silent call deletebufline(s:jq_ctx.out_buf, 1)
     call setbufvar(a:buf1, 'jq_changedtick', getbufvar(a:buf1, 'changedtick'))
     call setbufvar(a:buf2, 'jq_changedtick', getbufvar(a:buf2, 'changedtick'))
+    redrawstatus!
 endfunction
 
 function s:jq_job(jq_ctx, close_cb) abort
