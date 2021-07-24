@@ -224,9 +224,9 @@ function jqplay#start(mods, args, in_buf) abort
         execute printf('autocmd jqplay %s <buffer=%d> call s:filter_changed()', events, filter_buf)
     endif
 
-    execute 'command! -bar -bang JqplayClose call s:jq_close(<bang>0)'
-    execute 'command! -bar -bang -nargs=? -complete=customlist,jqplay#complete Jqrun call s:run_manually(<bang>0, <q-args>)'
-    execute 'command! -nargs=? -complete=custom,jqplay#stopcomplete Jqstop call s:jq_stop(<f-args>)'
+    execute 'command -bar -bang JqplayClose call s:jq_close(<bang>0)'
+    execute 'command -bar -bang -nargs=? -complete=customlist,jqplay#complete Jqrun call s:run_manually(<bang>0, <q-args>)'
+    execute 'command -nargs=? -complete=custom,jqplay#stopcomplete Jqstop call s:jq_stop(<f-args>)'
     let s:jqplay_open = 1
 endfunction
 
