@@ -278,19 +278,17 @@ endfunction
 
 function jqplay#complete(arglead, cmdline, cursorpos) abort
     if a:arglead[0] ==# '-'
-        return filter(
-                \ copy(['-a', '-C', '-c', '-e', '-f', '-h', '-j', '-L', '-M',
+        return copy(['-a', '-C', '-c', '-e', '-f', '-h', '-j', '-L', '-M',
                 \ '-n', '-R', '-r', '-S', '-s', '--arg', '--argfile', '--argjson',
                 \ '--args', '--ascii-output', '--exit-status', '--from-file',
                 \ '--color-output', '--compact-output', '--help', '--indent',
                 \ '--join-output', '--jsonargs', '--monochrome-output',
                 \ '--null-input', '--raw-input', '--raw-output', '--rawfile',
                 \ '--run-tests', '--seq', '--slurp', '--slurpfile', '--sort-keys',
-                \ '--stream', '--tab', '--unbuffered']),
-                \ 'stridx(v:val, a:arglead) == 0')
-    else
-        return map(getcompletion(a:arglead, 'file'), 'fnameescape(v:val)')
+                \ '--stream', '--tab', '--unbuffered'])
+                \ ->filter('stridx(v:val, a:arglead) == 0')
     endif
+    return getcompletion(a:arglead, 'file')->map('fnameescape(v:val)')
 endfunction
 
 let &cpoptions = s:save_cpo
