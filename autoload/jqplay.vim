@@ -13,16 +13,16 @@ set cpoptions&vim
 " Flag used to check if a jqplay session is running
 let s:jqplay_open = 0
 
-let s:defaults = {
+const s:defaults = {
         \ 'exe': exepath('jq'),
         \ 'opts': '',
         \ 'autocmds': ['InsertLeave', 'TextChanged']
         \ }
 
-let s:get = {k -> get(g:, 'jqplay', {})->get(k, s:defaults[k])}
+const s:get = {k -> get(g:, 'jqplay', {})->get(k, s:defaults[k])}
 
 " Helper function to create full jq command
-let s:jqcmd = {exe, opts, args, file -> printf('%s %s %s -f %s', exe, opts, args, file)}
+const s:jqcmd = {exe, opts, args, file -> printf('%s %s %s -f %s', exe, opts, args, file)}
 
 function s:error(msg)
     echohl ErrorMsg | echomsg a:msg | echohl None
@@ -33,10 +33,10 @@ function s:warning(msg)
 endfunction
 
 function s:new_scratch(bufname, filetype, clean, mods, ...) abort
-    let winid = win_getid()
+    const winid = win_getid()
 
     if bufexists(a:bufname)
-        let bufnr = bufnr(a:bufname)
+        const bufnr = bufnr(a:bufname)
         call setbufvar(bufnr, '&filetype', a:filetype)
         if a:clean
             silent call deletebufline(bufnr, 1, '$')
@@ -50,7 +50,7 @@ function s:new_scratch(bufname, filetype, clean, mods, ...) abort
     else
         silent execute a:mods 'new' fnameescape(a:bufname)
         setlocal noswapfile buflisted buftype=nofile bufhidden=hide
-        let bufnr = bufnr('%')
+        const bufnr = bufnr('%')
         call setbufvar(bufnr, '&filetype', a:filetype)
     endif
 
@@ -66,9 +66,9 @@ function s:run_manually(bang, args) abort
         return s:error('jqplay: -f and --from-file options not allowed')
     endif
 
-    let in_buf = s:jq_ctx.in_buf
-    let filter_buf = s:jq_ctx.filter_buf
-    let filter_tick = getbufvar(filter_buf, 'jq_changedtick')
+    const in_buf = s:jq_ctx.in_buf
+    const filter_buf = s:jq_ctx.filter_buf
+    const filter_tick = getbufvar(filter_buf, 'jq_changedtick')
 
     if filter_tick != getbufvar(filter_buf, 'changedtick')
         call writefile(getbufline(filter_buf, 1, '$'), s:jq_ctx.filter_file)
@@ -87,7 +87,7 @@ function s:run_manually(bang, args) abort
 endfunction
 
 function s:filter_changed() abort
-    let filter_buf = s:jq_ctx.filter_buf
+    const filter_buf = s:jq_ctx.filter_buf
     if getbufvar(filter_buf, 'jq_changedtick') == getbufvar(filter_buf, 'changedtick')
         return
     endif
@@ -96,7 +96,7 @@ function s:filter_changed() abort
 endfunction
 
 function s:input_changed() abort
-    let in_buf = s:jq_ctx.in_buf
+    const in_buf = s:jq_ctx.in_buf
     if getbufvar(in_buf, 'jq_changedtick') == getbufvar(in_buf, 'changedtick')
         return
     endif
@@ -177,18 +177,18 @@ function jqplay#start(mods, args, in_buf) abort
     endif
 
     " Check if -r/--raw-output or -j/--join-output options are passed
-    let out_ft = a:args =~# '\v-@1<!-\a*%(r|j)\a*|--%(raw|join)-output>' ? '' : 'json'
+    const out_ft = a:args =~# '\v-@1<!-\a*%(r|j)\a*|--%(raw|join)-output>' ? '' : 'json'
 
     " Output buffer
-    let out_name = 'jq-output://' .. (a:in_buf == -1 ? '' : bufname(a:in_buf))
-    let out_buf = s:new_scratch(out_name, out_ft, 1, a:mods)
+    const out_name = 'jq-output://' .. (a:in_buf == -1 ? '' : bufname(a:in_buf))
+    const out_buf = s:new_scratch(out_name, out_ft, 1, a:mods)
 
     " jq filter buffer
-    let filter_name = 'jq-filter://' .. (a:in_buf == -1 ? '' : bufname(a:in_buf))
-    let filter_buf = s:new_scratch(filter_name, 'jq', 0, 'botright', 10)
+    const filter_name = 'jq-filter://' .. (a:in_buf == -1 ? '' : bufname(a:in_buf))
+    const filter_buf = s:new_scratch(filter_name, 'jq', 0, 'botright', 10)
 
     " Temporary file where jq filter buffer is written to
-    let filter_file = tempname()
+    const filter_file = tempname()
 
     let s:jq_ctx = {
             \ 'in_buf': a:in_buf,
@@ -217,7 +217,7 @@ function jqplay#start(mods, args, in_buf) abort
 
     " Run jq interactively when input or filter buffer are modified
     if !empty(s:get('autocmds'))
-        let events = join(s:get('autocmds'), ',')
+        const events = join(s:get('autocmds'), ',')
         if a:in_buf != -1
             execute printf('autocmd jqplay %s <buffer> call s:input_changed()', events)
         endif
@@ -239,8 +239,8 @@ function jqplay#scratch(bang, mods, args) abort
         return s:error('jqplay: -f and --from-file options not allowed')
     endif
 
-    let raw_input = a:args =~# '-\@1<!-\a*R\a*\>\|--raw-input\>' ? 1 : 0
-    let null_input = a:args =~# '-\@1<!-\a*n\a*\>\|--null-input\>' ? 1 : 0
+    const raw_input = a:args =~# '-\@1<!-\a*R\a*\>\|--raw-input\>' ? 1 : 0
+    const null_input = a:args =~# '-\@1<!-\a*n\a*\>\|--null-input\>' ? 1 : 0
 
     if a:bang && raw_input && null_input
         return s:error('jqplay: not possible to run :JqplayScratch! with -n and -R')
@@ -254,8 +254,8 @@ function jqplay#scratch(bang, mods, args) abort
         call setbufvar('%', '&filetype', raw_input ? '' : 'json')
     endif
 
-    let args = a:bang && !null_input ? (a:args .. ' -n') : a:args
-    let bufnr = a:bang ? -1 : bufnr('%')
+    const args = a:bang && !null_input ? (a:args .. ' -n') : a:args
+    const bufnr = a:bang ? -1 : bufnr('%')
     call jqplay#start(a:mods, args, bufnr)
 
     " Close the initial window that we opened with :tab split
