@@ -3,7 +3,7 @@
 " File:         autoload/jqplay.vim
 " Author:       bfrg <https://github.com/bfrg>
 " Website:      https://github.com/bfrg/vim-jqplay
-" Last Change:  Jul 24, 2021
+" Last Change:  Jul 29, 2021
 " License:      Same as Vim itself (see :h license)
 " ==============================================================================
 
@@ -239,8 +239,8 @@ function jqplay#scratch(bang, mods, args) abort
         return s:error('jqplay: -f and --from-file options not allowed')
     endif
 
-    const raw_input = a:args =~# '-\@1<!-\a*R\a*\>\|--raw-input\>' ? 1 : 0
-    const null_input = a:args =~# '-\@1<!-\a*n\a*\>\|--null-input\>' ? 1 : 0
+    const raw_input = a:args =~# '-\@1<!-\a*R\a*\>\|--raw-input\>'
+    const null_input = a:args =~# '-\@1<!-\a*n\a*\>\|--null-input\>'
 
     if a:bang && raw_input && null_input
         return s:error('jqplay: not possible to run :JqplayScratch! with -n and -R')
