@@ -24,12 +24,12 @@ const s:get = {k -> get(g:, 'jqplay', {})->get(k, s:defaults[k])}
 " Helper function to create full jq command
 const s:jqcmd = {exe, opts, args, file -> printf('%s %s %s -f %s', exe, opts, args, file)}
 
-function s:error(msg)
-    echohl ErrorMsg | echomsg a:msg | echohl None
+function s:error(...)
+    echohl ErrorMsg | echomsg 'jqplay:' call('printf', a:000) | echohl None
 endfunction
 
-function s:warning(msg)
-    echohl WarningMsg | echomsg a:msg | echohl None
+function s:warning(...)
+    echohl WarningMsg | echomsg 'jqplay:' call('printf', a:000) | echohl None
 endfunction
 
 function s:new_scratch(bufname, filetype, clean, mods, ...) abort
@@ -63,7 +63,7 @@ endfunction
 
 function s:run_manually(bang, args) abort
     if a:args =~# '\v-@1<!-\a*f>|--from-file>'
-        return s:error('jqplay: -f and --from-file options not allowed')
+        return s:error('-f and --from-file options not allowed')
     endif
 
     const in_buf = s:jq_ctx.in_buf
@@ -169,11 +169,11 @@ endfunction
 
 function jqplay#start(mods, args, in_buf) abort
     if a:args =~# '\v-@1<!-\a*f>|--from-file>'
-        return s:error('jqplay: -f and --from-file options not allowed')
+        return s:error('-f and --from-file options not allowed')
     endif
 
     if s:jqplay_open
-        return s:error('jqplay: only one interactive session allowed')
+        return s:error('only one interactive session allowed')
     endif
 
     " Check if -r/--raw-output or -j/--join-output options are passed
@@ -232,18 +232,18 @@ endfunction
 
 function jqplay#scratch(bang, mods, args) abort
     if s:jqplay_open
-        return s:error('jqplay: only one interactive session allowed')
+        return s:error('only one interactive session allowed')
     endif
 
     if a:args =~# '\v-@1<!-\a*f>|--from-file>'
-        return s:error('jqplay: -f and --from-file options not allowed')
+        return s:error('-f and --from-file options not allowed')
     endif
 
     const raw_input = a:args =~# '-\@1<!-\a*R\a*\>\|--raw-input\>'
     const null_input = a:args =~# '-\@1<!-\a*n\a*\>\|--null-input\>'
 
     if a:bang && raw_input && null_input
-        return s:error('jqplay: not possible to run :JqplayScratch! with -n and -R')
+        return s:error('not possible to run :JqplayScratch! with -n and -R')
     endif
 
     if a:bang
