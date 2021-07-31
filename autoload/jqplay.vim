@@ -3,7 +3,7 @@
 " File:         autoload/jqplay.vim
 " Author:       bfrg <https://github.com/bfrg>
 " Website:      https://github.com/bfrg/vim-jqplay
-" Last Change:  Jul 31, 2021
+" Last Change:  Aug 1, 2021
 " License:      Same as Vim itself (see :h license)
 " ==============================================================================
 
@@ -84,7 +84,7 @@ function s:run_manually(bang, args) abort
         call getbufline(filter_buf, 1, '$')->writefile(s:jq_ctx.filter_file)
     endif
 
-    let jq_ctx = copy(s:jq_ctx)
+    let jq_ctx = deepcopy(s:jq_ctx)
     let jq_ctx.cmd = s:jqcmd(s:get('exe'), s:get('opts'), a:args, s:jq_ctx.filter_file)
     if a:bang
         let s:jq_ctx = jq_ctx
