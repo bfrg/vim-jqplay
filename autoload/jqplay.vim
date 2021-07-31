@@ -20,9 +20,12 @@ set cpoptions&vim
 " }
 let s:jq_ctx = {}
 
+let s:timer_id = 0
+
 const s:defaults = {
         \ 'exe': exepath('jq'),
         \ 'opts': '',
+        \ 'delay': 500,
         \ 'autocmds': ['InsertLeave', 'TextChanged']
         \ }
 
@@ -87,27 +90,34 @@ function s:run_manually(bang, args) abort
         let s:jq_ctx = jq_ctx
     endif
     if in_buf == -1
-        call s:jq_job(s:jq_ctx, funcref('s:close_cb', [filter_buf]))
+        call s:run_jq(s:jq_ctx, funcref('s:close_cb', [filter_buf]))
     else
-        call s:jq_job(jq_ctx, funcref('s:close_cb_2', [in_buf, filter_buf]))
+        call s:run_jq(jq_ctx, funcref('s:close_cb_2', [in_buf, filter_buf]))
     endif
 endfunction
 
-function s:filter_changed() abort
+function s:on_filter_changed() abort
     const filter_buf = s:jq_ctx.filter_buf
     if getbufvar(filter_buf, 'jq_changedtick') == getbufvar(filter_buf, 'changedtick')
         return
     endif
-    call getbufline(filter_buf, 1, '$')->writefile(s:jq_ctx.filter_file)
-    call s:jq_job(s:jq_ctx, funcref('s:close_cb', [filter_buf]))
+    call timer_stop(s:timer_id)
+    let s:timer_id = s:get('delay')->timer_start(funcref('s:filter_changed'))
 endfunction
 
-function s:input_changed() abort
+function s:filter_changed(...) abort
+    const filter_buf = s:jq_ctx.filter_buf
+    call getbufline(filter_buf, 1, '$')->writefile(s:jq_ctx.filter_file)
+    call s:run_jq(s:jq_ctx, funcref('s:close_cb', [filter_buf]))
+endfunction
+
+function s:on_input_changed() abort
     const in_buf = s:jq_ctx.in_buf
     if getbufvar(in_buf, 'jq_changedtick') == getbufvar(in_buf, 'changedtick')
         return
     endif
-    call s:jq_job(s:jq_ctx, funcref('s:close_cb', [in_buf]))
+    call timer_stop(s:timer_id)
+    let s:timer_id = s:get('delay')->timer_start({_ -> s:run_jq(s:jq_ctx, funcref('s:close_cb', [in_buf]))})
 endfunction
 
 function s:close_cb(buf, channel) abort
@@ -123,7 +133,7 @@ function s:close_cb_2(buf1, buf2, channel) abort
     redrawstatus!
 endfunction
 
-function s:jq_job(jq_ctx, close_cb) abort
+function s:run_jq(jq_ctx, close_cb) abort
     silent call deletebufline(a:jq_ctx.out_buf, 1, '$')
 
     if exists('s:job') && job_status(s:job) ==# 'run'
@@ -224,11 +234,11 @@ function jqplay#start(mods, args, in_buf) abort
 
     " Run jq interactively when input or filter buffer are modified
     if !empty(s:get('autocmds'))
-        const events = join(s:get('autocmds'), ',')
+        const events = s:get('autocmds')->join(',')
         if a:in_buf != -1
-            execute printf('autocmd jqplay %s <buffer> call s:input_changed()', events)
+            execute printf('autocmd jqplay %s <buffer> call s:on_input_changed()', events)
         endif
-        execute printf('autocmd jqplay %s <buffer=%d> call s:filter_changed()', events, filter_buf)
+        execute printf('autocmd jqplay %s <buffer=%d> call s:on_filter_changed()', events, filter_buf)
     endif
 
     execute 'command -bar -bang JqplayClose call s:jq_close(<bang>0)'
