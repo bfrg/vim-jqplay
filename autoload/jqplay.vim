@@ -3,15 +3,22 @@
 " File:         autoload/jqplay.vim
 " Author:       bfrg <https://github.com/bfrg>
 " Website:      https://github.com/bfrg/vim-jqplay
-" Last Change:  Jul 29, 2021
+" Last Change:  Jul 31, 2021
 " License:      Same as Vim itself (see :h license)
 " ==============================================================================
 
 let s:save_cpo = &cpoptions
 set cpoptions&vim
 
-" Flag used to check if a jqplay session is running
-let s:jqplay_open = 0
+" Context object used during a jqplay session
+" {
+"   'in_buf':      <input buffer number>
+"   'out_buf':     <output buffer number>,
+"   'filter_buf':  <filter buffer number>,
+"   'filter_file': <full path to filter file on disk>,
+"   'cmd':         <jq command running on buffer change>
+" }
+let s:jq_ctx = {}
 
 const s:defaults = {
         \ 'exe': exepath('jq'),
@@ -146,7 +153,7 @@ function s:jq_stop(...) abort
 endfunction
 
 function s:jq_close(bang) abort
-    if !s:jqplay_open && !(exists('#jqplay#BufDelete') || exists('#jqplay#BufWipeout'))
+    if empty(s:jq_ctx) && !(exists('#jqplay#BufDelete') || exists('#jqplay#BufWipeout'))
         return
     endif
     call s:jq_stop()
@@ -163,7 +170,7 @@ function s:jq_close(bang) abort
     delcommand JqplayClose
     delcommand Jqrun
     delcommand Jqstop
-    let s:jqplay_open = 0
+    let s:jq_ctx = {}
     call s:warning('jqplay interactive session closed')
 endfunction
 
@@ -172,7 +179,7 @@ function jqplay#start(mods, args, in_buf) abort
         return s:error('-f and --from-file options not allowed')
     endif
 
-    if s:jqplay_open
+    if !empty(s:jq_ctx)
         return s:error('only one interactive session allowed')
     endif
 
@@ -227,11 +234,10 @@ function jqplay#start(mods, args, in_buf) abort
     execute 'command -bar -bang JqplayClose call s:jq_close(<bang>0)'
     execute 'command -bar -bang -nargs=? -complete=customlist,jqplay#complete Jqrun call s:run_manually(<bang>0, <q-args>)'
     execute 'command -nargs=? -complete=custom,jqplay#stopcomplete Jqstop call s:jq_stop(<f-args>)'
-    let s:jqplay_open = 1
 endfunction
 
 function jqplay#scratch(bang, mods, args) abort
-    if s:jqplay_open
+    if !empty(s:jq_ctx)
         return s:error('only one interactive session allowed')
     endif
 
@@ -265,7 +271,7 @@ function jqplay#scratch(bang, mods, args) abort
 endfunction
 
 function jqplay#ctx() abort
-    return s:jqplay_open ? s:jq_ctx : {}
+    return s:jq_ctx
 endfunction
 
 function jqplay#jq_job() abort
