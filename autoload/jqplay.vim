@@ -265,21 +265,7 @@ function jqplay#scratch(bang, mods, args) abort
     endif
 endfunction
 
-function jqplay#ctx() abort
-    return {
-            \ 'in_buf': s:in_buf,
-            \ 'out_buf': s:out_buf,
-            \ 'filter_buf': s:filter_buf,
-            \ 'filter_file': s:filter_file,
-            \ 'in_changedtick': getbufvar(s:in_buf, 'changedtick', -1),
-            \ 'filter_changedtick': getbufvar(s:filter_buf, 'changedtick'),
-            \ 'in_timer': s:in_timer,
-            \ 'filter_timer': s:filter_timer,
-            \ 'cmd': s:jq_cmd
-            \ }
-endfunction
-
-function jqplay#jq_job() abort
+function jqplay#job() abort
     return exists('s:job') ? s:job : ''
 endfunction
 

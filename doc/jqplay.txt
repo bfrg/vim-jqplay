@@ -86,17 +86,6 @@ Commands ~
             Adding "!" will create an interactive session without any input
             buffer and force the --null-input option.
 
-Functions ~
-
-jqplay#jq_job()                                              *jqplay#jq_job()*
-            Returns the jq job object as obtained by |job_start()|. Can be
-            used to get the status of the job with |job_status()|, for
-            example, for 'statusline' integration.
-
-jqplay#ctx()                                                    *jqplay#ctx()*
-            Returns a jqplay context |Dictionary| that is used internally
-            during a jqplay session. Useful for debugging.
-
 ==============================================================================
 CONFIGURATION                                                  *jqplay-config*
                                                                     *g:jqplay*
