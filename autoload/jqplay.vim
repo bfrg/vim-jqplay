@@ -79,32 +79,25 @@ function s:run_manually(bang, args) abort
         return s:error('-f and --from-file options not allowed')
     endif
 
-    const in_buf = s:jq_ctx.in_buf
-    const filter_buf = s:jq_ctx.filter_buf
-    const filter_tick = getbufvar(filter_buf, 'jq_changedtick')
-
-    if filter_tick != getbufvar(filter_buf, 'changedtick')
-        call getbufline(filter_buf, 1, '$')->writefile(s:jq_ctx.filter_file)
+    if s:jq_ctx.filter_changedtick != getbufvar(s:jq_ctx.filter_buf, 'changedtick')
+        call getbufline(s:jq_ctx.filter_buf, 1, '$')->writefile(s:jq_ctx.filter_file)
     endif
 
     let jq_ctx = deepcopy(s:jq_ctx)
     let jq_ctx.cmd = s:jqcmd(s:getopt('exe'), s:getopt('opts'), a:args, s:jq_ctx.filter_file)
+    call s:run_jq(jq_ctx)
+
     if a:bang
         let s:jq_ctx = jq_ctx
-    endif
-
-    if s:jq_with_input()
-        call s:run_jq(jq_ctx, funcref('s:close_cb_2', [in_buf, filter_buf]))
-    else
-        call s:run_jq(s:jq_ctx, funcref('s:close_cb', [filter_buf]))
     endif
 endfunction
 
 function s:on_filter_changed() abort
-    const filter_buf = s:jq_ctx.filter_buf
-    if getbufvar(filter_buf, 'jq_changedtick') == getbufvar(filter_buf, 'changedtick')
+    if s:jq_ctx.filter_changedtick == getbufvar(s:jq_ctx.filter_buf, 'changedtick')
         return
     endif
+
+    let s:jq_ctx.filter_changedtick = getbufvar(s:jq_ctx.filter_buf, 'changedtick')
     call timer_stop(s:timer_id)
     let s:timer_id = s:getopt('delay')->timer_start(funcref('s:filter_changed'))
 endfunction
@@ -112,32 +105,27 @@ endfunction
 function s:filter_changed(...) abort
     const filter_buf = s:jq_ctx.filter_buf
     call getbufline(filter_buf, 1, '$')->writefile(s:jq_ctx.filter_file)
-    call s:run_jq(s:jq_ctx, funcref('s:close_cb', [filter_buf]))
+    call s:run_jq(s:jq_ctx)
 endfunction
 
 function s:on_input_changed() abort
     const in_buf = s:jq_ctx.in_buf
-    if getbufvar(in_buf, 'jq_changedtick') == getbufvar(in_buf, 'changedtick')
+
+    if s:jq_ctx.in_changedtick == getbufvar(in_buf, 'changedtick')
         return
     endif
+
+    let s:jq_ctx.in_changedtick = getbufvar(in_buf, 'changedtick')
     call timer_stop(s:timer_id)
-    let s:timer_id = s:getopt('delay')->timer_start({_ -> s:run_jq(s:jq_ctx, funcref('s:close_cb', [in_buf]))})
+    let s:timer_id = s:getopt('delay')->timer_start({_ -> s:run_jq(s:jq_ctx)})
 endfunction
 
-function s:close_cb(buf, channel) abort
+function s:close_cb(channel) abort
     silent call deletebufline(s:jq_ctx.out_buf, 1)
-    call setbufvar(a:buf, 'jq_changedtick', getbufvar(a:buf, 'changedtick'))
     redrawstatus!
 endfunction
 
-function s:close_cb_2(buf1, buf2, channel) abort
-    silent call deletebufline(s:jq_ctx.out_buf, 1)
-    call setbufvar(a:buf1, 'jq_changedtick', getbufvar(a:buf1, 'changedtick'))
-    call setbufvar(a:buf2, 'jq_changedtick', getbufvar(a:buf2, 'changedtick'))
-    redrawstatus!
-endfunction
-
-function s:run_jq(jq_ctx, close_cb) abort
+function s:run_jq(jq_ctx) abort
     silent call deletebufline(a:jq_ctx.out_buf, 1, '$')
 
     if exists('s:job') && job_status(s:job) ==# 'run'
@@ -148,7 +136,7 @@ function s:run_jq(jq_ctx, close_cb) abort
             \ 'in_io': 'null',
             \ 'out_cb': {_,msg -> appendbufline(a:jq_ctx.out_buf, '$', msg)},
             \ 'err_cb': {_,msg -> appendbufline(a:jq_ctx.out_buf, '$', '// ' .. msg)},
-            \ 'close_cb': a:close_cb
+            \ 'close_cb': funcref('s:close_cb')
             \ }
 
     if s:jq_with_input()
@@ -170,6 +158,7 @@ function s:jq_close(bang) abort
     if empty(s:jq_ctx) && !(exists('#jqplay#BufDelete') || exists('#jqplay#BufWipeout'))
         return
     endif
+
     call s:jq_stop()
     autocmd! jqplay
 
@@ -185,6 +174,7 @@ function s:jq_close(bang) abort
     delcommand Jqrun
     delcommand Jqstop
     let s:jq_ctx = {}
+
     call s:warning('jqplay interactive session closed')
 endfunction
 
@@ -217,13 +207,10 @@ function jqplay#start(mods, args, in_buf) abort
             \ 'out_buf': out_buf,
             \ 'filter_buf': filter_buf,
             \ 'filter_file': filter_file,
+            \ 'in_changedtick': getbufvar(a:in_buf, 'changedtick', -1),
+            \ 'filter_changedtick': getbufvar(filter_buf, 'changedtick', -1),
             \ 'cmd': s:jqcmd(s:getopt('exe'), s:getopt('opts'), a:args, filter_file)
             \ }
-
-    if s:jq_with_input()
-        call setbufvar(a:in_buf, 'jq_changedtick', getbufvar(a:in_buf, 'changedtick'))
-    endif
-    call setbufvar(filter_buf, 'jq_changedtick', getbufvar(filter_buf, 'changedtick'))
 
     " When input, output or filter buffer are deleted/wiped out, close the
     " interactive session
