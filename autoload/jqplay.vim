@@ -3,7 +3,7 @@
 " File:         autoload/jqplay.vim
 " Author:       bfrg <https://github.com/bfrg>
 " Website:      https://github.com/bfrg/vim-jqplay
-" Last Change:  Aug 1, 2021
+" Last Change:  Aug 14, 2021
 " License:      Same as Vim itself (see :h license)
 " ==============================================================================
 
@@ -29,10 +29,13 @@ const s:defaults = {
         \ 'autocmds': ['InsertLeave', 'TextChanged']
         \ }
 
-const s:get = {k -> get(g:, 'jqplay', {})->get(k, s:defaults[k])}
+const s:getopt = {k -> get(g:, 'jqplay', {})->get(k, s:defaults[k])}
 
 " Helper function to create full jq command
 const s:jqcmd = {exe, opts, args, file -> printf('%s %s %s -f %s', exe, opts, args, file)}
+
+" Is jqplay session running with input buffer?
+const s:jq_with_input = {-> s:jq_ctx.in_buf != -1}
 
 function s:error(...)
     echohl ErrorMsg | echomsg 'jqplay:' call('printf', a:000) | echohl None
@@ -85,14 +88,15 @@ function s:run_manually(bang, args) abort
     endif
 
     let jq_ctx = deepcopy(s:jq_ctx)
-    let jq_ctx.cmd = s:jqcmd(s:get('exe'), s:get('opts'), a:args, s:jq_ctx.filter_file)
+    let jq_ctx.cmd = s:jqcmd(s:getopt('exe'), s:getopt('opts'), a:args, s:jq_ctx.filter_file)
     if a:bang
         let s:jq_ctx = jq_ctx
     endif
-    if in_buf == -1
-        call s:run_jq(s:jq_ctx, funcref('s:close_cb', [filter_buf]))
-    else
+
+    if s:jq_with_input()
         call s:run_jq(jq_ctx, funcref('s:close_cb_2', [in_buf, filter_buf]))
+    else
+        call s:run_jq(s:jq_ctx, funcref('s:close_cb', [filter_buf]))
     endif
 endfunction
 
@@ -102,7 +106,7 @@ function s:on_filter_changed() abort
         return
     endif
     call timer_stop(s:timer_id)
-    let s:timer_id = s:get('delay')->timer_start(funcref('s:filter_changed'))
+    let s:timer_id = s:getopt('delay')->timer_start(funcref('s:filter_changed'))
 endfunction
 
 function s:filter_changed(...) abort
@@ -117,7 +121,7 @@ function s:on_input_changed() abort
         return
     endif
     call timer_stop(s:timer_id)
-    let s:timer_id = s:get('delay')->timer_start({_ -> s:run_jq(s:jq_ctx, funcref('s:close_cb', [in_buf]))})
+    let s:timer_id = s:getopt('delay')->timer_start({_ -> s:run_jq(s:jq_ctx, funcref('s:close_cb', [in_buf]))})
 endfunction
 
 function s:close_cb(buf, channel) abort
@@ -147,7 +151,7 @@ function s:run_jq(jq_ctx, close_cb) abort
             \ 'close_cb': a:close_cb
             \ }
 
-    if a:jq_ctx.in_buf != -1
+    if s:jq_with_input()
         call extend(opts, {'in_io': 'buffer', 'in_buf': a:jq_ctx.in_buf})
     endif
 
@@ -172,7 +176,7 @@ function s:jq_close(bang) abort
     if a:bang
         execute 'bwipeout' s:jq_ctx.filter_buf
         execute 'bwipeout' s:jq_ctx.out_buf
-        if s:jq_ctx.in_buf != -1 && getbufvar(s:jq_ctx.in_buf, '&buftype') ==# 'nofile'
+        if s:jq_with_input() && getbufvar(s:jq_ctx.in_buf, '&buftype') ==# 'nofile'
             execute 'bwipeout' s:jq_ctx.in_buf
         endif
     endif
@@ -184,6 +188,7 @@ function s:jq_close(bang) abort
     call s:warning('jqplay interactive session closed')
 endfunction
 
+" When 'in_buf' is set to -1, no input buffer is passed to jq
 function jqplay#start(mods, args, in_buf) abort
     if a:args =~# '\v-@1<!-\a*f>|--from-file>'
         return s:error('-f and --from-file options not allowed')
@@ -212,11 +217,10 @@ function jqplay#start(mods, args, in_buf) abort
             \ 'out_buf': out_buf,
             \ 'filter_buf': filter_buf,
             \ 'filter_file': filter_file,
-            \ 'cmd': s:jqcmd(s:get('exe'), s:get('opts'), a:args, filter_file)
+            \ 'cmd': s:jqcmd(s:getopt('exe'), s:getopt('opts'), a:args, filter_file)
             \ }
 
-    " When a:in_buf is set to -1, no input buffer will be passed to jq
-    if a:in_buf != -1
+    if s:jq_with_input()
         call setbufvar(a:in_buf, 'jq_changedtick', getbufvar(a:in_buf, 'changedtick'))
     endif
     call setbufvar(filter_buf, 'jq_changedtick', getbufvar(filter_buf, 'changedtick'))
@@ -225,7 +229,7 @@ function jqplay#start(mods, args, in_buf) abort
     " interactive session
     augroup jqplay
         autocmd!
-        if a:in_buf != -1
+        if s:jq_with_input()
             execute printf('autocmd BufDelete,BufWipeout <buffer=%d> call s:jq_close(0)', a:in_buf)
         endif
         execute printf('autocmd BufDelete,BufWipeout <buffer=%d> call s:jq_close(0)', out_buf)
@@ -233,9 +237,9 @@ function jqplay#start(mods, args, in_buf) abort
     augroup END
 
     " Run jq interactively when input or filter buffer are modified
-    if !empty(s:get('autocmds'))
-        const events = s:get('autocmds')->join(',')
-        if a:in_buf != -1
+    if !empty(s:getopt('autocmds'))
+        const events = s:getopt('autocmds')->join(',')
+        if s:jq_with_input()
             execute printf('autocmd jqplay %s <buffer> call s:on_input_changed()', events)
         endif
         execute printf('autocmd jqplay %s <buffer=%d> call s:on_filter_changed()', events, filter_buf)
