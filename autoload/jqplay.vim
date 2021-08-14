@@ -12,15 +12,17 @@ set cpoptions&vim
 
 " Context object used during a jqplay session
 " {
-"   'in_buf':      <input buffer number>
-"   'out_buf':     <output buffer number>,
-"   'filter_buf':  <filter buffer number>,
-"   'filter_file': <full path to filter file on disk>,
-"   'cmd':         <jq command running on buffer change>
+"   'in_buf':             <input buffer number>
+"   'out_buf':            <output buffer number>,
+"   'filter_buf':         <filter buffer number>,
+"   'filter_file':        <full path to filter file on disk>,
+"   'filter_changedtick': <changedtick of filter buffer>,
+"   'in_changedtick':     <changedtick of input buffer>,
+"   'filter_timer':       <timer ID for filter buffer>,
+"   'in_timer':           <timer ID for input buffer>,
+"   'cmd':                <jq command running on buffer change>
 " }
 let s:jq_ctx = {}
-
-let s:timer_id = 0
 
 const s:defaults = {
         \ 'exe': exepath('jq'),
@@ -98,8 +100,8 @@ function s:on_filter_changed() abort
     endif
 
     let s:jq_ctx.filter_changedtick = getbufvar(s:jq_ctx.filter_buf, 'changedtick')
-    call timer_stop(s:timer_id)
-    let s:timer_id = s:getopt('delay')->timer_start(funcref('s:filter_changed'))
+    call timer_stop(s:jq_ctx.filter_timer)
+    let s:jq_ctx.filter_timer = s:getopt('delay')->timer_start(funcref('s:filter_changed'))
 endfunction
 
 function s:filter_changed(...) abort
@@ -116,8 +118,8 @@ function s:on_input_changed() abort
     endif
 
     let s:jq_ctx.in_changedtick = getbufvar(in_buf, 'changedtick')
-    call timer_stop(s:timer_id)
-    let s:timer_id = s:getopt('delay')->timer_start({_ -> s:run_jq(s:jq_ctx)})
+    call timer_stop(s:jq_ctx.in_timer)
+    let s:jq_ctx.in_timer = s:getopt('delay')->timer_start({_ -> s:run_jq(s:jq_ctx)})
 endfunction
 
 function s:close_cb(channel) abort
@@ -208,7 +210,9 @@ function jqplay#start(mods, args, in_buf) abort
             \ 'filter_buf': filter_buf,
             \ 'filter_file': filter_file,
             \ 'in_changedtick': getbufvar(a:in_buf, 'changedtick', -1),
-            \ 'filter_changedtick': getbufvar(filter_buf, 'changedtick', -1),
+            \ 'filter_changedtick': getbufvar(filter_buf, 'changedtick'),
+            \ 'in_timer': 0,
+            \ 'filter_timer': 0,
             \ 'cmd': s:jqcmd(s:getopt('exe'), s:getopt('opts'), a:args, filter_file)
             \ }
 
