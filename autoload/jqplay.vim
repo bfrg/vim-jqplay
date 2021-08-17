@@ -3,7 +3,7 @@
 " File:         autoload/jqplay.vim
 " Author:       bfrg <https://github.com/bfrg>
 " Website:      https://github.com/bfrg/vim-jqplay
-" Last Change:  Aug 14, 2021
+" Last Change:  Aug 17, 2021
 " License:      Same as Vim itself (see :h license)
 " ==============================================================================
 
@@ -74,7 +74,7 @@ function s:new_scratch(bufname, filetype, clean, mods, ...) abort
 endfunction
 
 function s:run_manually(bang, args) abort
-    if a:args =~# '\v-@1<!-\a*f>|--from-file>'
+    if a:args =~# '\%(^\|\s\)-\a*f\>\|--from-file\>'
         return s:error('-f and --from-file options not allowed')
     endif
 
@@ -175,7 +175,7 @@ endfunction
 
 " When 'in_buf' is set to -1, no input buffer is passed to jq
 function jqplay#start(mods, args, in_buf) abort
-    if a:args =~# '\v-@1<!-\a*f>|--from-file>'
+    if a:args =~# '\%(^\|\s\)-\a*f\>\|--from-file\>'
         return s:error('-f and --from-file options not allowed')
     endif
 
@@ -187,7 +187,7 @@ function jqplay#start(mods, args, in_buf) abort
     let s:in_buf = a:in_buf
 
     " Check if -r/--raw-output or -j/--join-output options are passed
-    const out_ft = a:args =~# '\v-@1<!-\a*%(r|j)\a*|--%(raw|join)-output>' ? '' : 'json'
+    const out_ft = a:args =~# '\%(^\|\s\)-\a*[rj]\a*\|--\%(raw\|join\)-output\>' ? '' : 'json'
 
     " Output buffer
     const out_name = 'jq-output://' .. (a:in_buf == -1 ? '' : bufname(a:in_buf))
@@ -236,12 +236,12 @@ function jqplay#scratch(bang, mods, args) abort
         return s:error('only one interactive session allowed')
     endif
 
-    if a:args =~# '\v-@1<!-\a*f>|--from-file>'
+    if a:args =~# '\%(^\|\s\)-\a*f\>\|--from-file\>'
         return s:error('-f and --from-file options not allowed')
     endif
 
-    const raw_input = a:args =~# '-\@1<!-\a*R\a*\>\|--raw-input\>'
-    const null_input = a:args =~# '-\@1<!-\a*n\a*\>\|--null-input\>'
+    const raw_input = a:args =~# '\%(^\|\s\)-\a*R\a*\>\|--raw-input\>'
+    const null_input = a:args =~# '\%(^\|\s\)-\a*n\a*\>\|--null-input\>'
 
     if a:bang && raw_input && null_input
         return s:error('not possible to run :JqplayScratch! with -n and -R')
