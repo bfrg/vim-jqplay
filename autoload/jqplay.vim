@@ -166,7 +166,7 @@ def Jq_close(bang: bool)
     endif
 
     Jq_stop()
-    autocmd! jqplay
+    autocmd_delete([{group: 'jqplay'}])
 
     if bang
         execute 'bwipeout' filter_buf
@@ -180,7 +180,7 @@ def Jq_close(bang: bool)
     delcommand Jqrun
     delcommand Jqstop
     is_running = false
-    Warning('jqplay interactive session closed')
+    Warning('interactive session closed')
 enddef
 
 # When 'in_buffer' is set to -1, no input buffer is passed to jq
@@ -218,29 +218,63 @@ export def Start(mods: string, args: string, in_buffer: number)
     filter_timer = 0
     jq_cmd = Jqcmd(Getopt('exe'), Getopt('opts'), args, filter_file)
 
-    # When input, output or filter buffer are deleted/wiped out, close the
-    # interactive session
-    augroup jqplay
-        autocmd!
-        if Jq_with_input()
-            execute $'autocmd BufDelete,BufWipeout <buffer={in_buffer}> Jq_close(false)'
-        endif
-        execute $'autocmd BufDelete,BufWipeout <buffer={out_buf}> Jq_close(false)'
-        execute $'autocmd BufDelete,BufWipeout <buffer={filter_buf}> Jq_close(false)'
-    augroup END
-
-    # Run jq interactively when input or filter buffer are modified
-    if !empty(Getopt('autocmds'))
-        const events: string = Getopt('autocmds')->join(',')
-        if Jq_with_input()
-            execute $'autocmd jqplay {events} <buffer> On_input_changed()'
-        endif
-        execute $'autocmd jqplay {events} <buffer={filter_buf}> On_filter_changed()'
-    endif
-
     command -bar -bang JqplayClose Jq_close(<bang>false)
     command -bar -bang -nargs=? -complete=customlist,Complete Jqrun Run_manually(<bang>false, <q-args>)
     command -nargs=? -complete=custom,Stopcomplete Jqstop Jq_stop(<q-args>)
+
+    # When input, output or filter buffer are deleted/wiped out, close the
+    # interactive session
+    autocmd_add([
+        {
+            group: 'jqplay',
+            event: ['BufDelete', 'BufWipeout'],
+            bufnr: out_buf,
+            cmd: 'Jq_close(false)',
+            replace: true
+        },
+        {
+            group: 'jqplay',
+            event: ['BufDelete', 'BufWipeout'],
+            bufnr: filter_buf,
+            cmd: 'Jq_close(false)',
+            replace: true
+        }
+    ])
+
+    if Jq_with_input()
+        autocmd_add([{
+            group: 'jqplay',
+            event: ['BufDelete', 'BufWipeout'],
+            bufnr: in_buffer,
+            cmd: 'Jq_close(false)',
+            replace: true
+        }])
+    endif
+
+    # Run jq interactively when input or filter buffer are modified
+    const events: list<string> = Getopt('autocmds')
+
+    if !empty(events)
+        return
+    endif
+
+    autocmd_add([{
+        group: 'jqplay',
+        event: events,
+        bufnr: filter_buf,
+        cmd: 'On_filter_changed()',
+        replace: true
+    }])
+
+    if Jq_with_input()
+        autocmd_add([{
+            group: 'jqplay',
+            event: events,
+            bufnr: bufnr(),
+            cmd: 'On_input_changed()',
+            replace: true
+        }])
+    endif
 enddef
 
 export def Scratch(input: bool, mods: string, args: string)
