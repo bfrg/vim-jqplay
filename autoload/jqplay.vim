@@ -243,7 +243,7 @@ export def Start(mods: string, args: string, in_buffer: number)
     command -nargs=? -complete=custom,Stopcomplete Jqstop Jq_stop(<q-args>)
 enddef
 
-export def Scratch(bang: bool, mods: string, args: string)
+export def Scratch(input: bool, mods: string, args: string)
     if is_running
         Error('only one interactive session allowed')
         return
@@ -257,27 +257,27 @@ export def Scratch(bang: bool, mods: string, args: string)
     const raw_input: bool = args =~ '\%(^\|\s\)-\a*R\a*\>\|--raw-input\>'
     const null_input: bool = args =~ '\%(^\|\s\)-\a*n\a*\>\|--null-input\>'
 
-    if bang && raw_input && null_input
-        Error('not possible to run :JqplayScratch! with -n and -R')
+    if !input && raw_input && null_input
+        Error('not possible to run :JqplayScratchNoInput with -n and -R')
         return
     endif
 
-    if bang
-        tab split
-    else
+    if input
         tabnew
         setlocal buflisted buftype=nofile bufhidden=hide noswapfile
         if !raw_input
             setlocal filetype=json
         endif
+    else
+        tab split
     endif
 
-    const arg: string = bang && !null_input ? (args .. ' -n') : args
-    const bufnr: number = bang ? -1 : bufnr()
+    const arg: string = !input && !null_input ? (args .. ' -n') : args
+    const bufnr: number = input ? bufnr() : -1
     Start(mods, arg, bufnr)
 
     # Close the initial window that we opened with :tab split
-    if bang
+    if !input
         close
     endif
 enddef

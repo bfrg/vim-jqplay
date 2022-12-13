@@ -74,17 +74,18 @@ Commands ~
 :Jqstop [{how}]                                                      *:Jqstop*
             Stop any running jq process that was previously started with
             |:Jqplay| or |:Jqrun|. When {how} is omitted, the job will be
-            terminated. See |job_stop()| for more details on the {how} values.
+            terminated. See |job_stop()| for possible {how} values.
 
-:JqplayScratch[!] [{args}]                                    *:JqplayScratch*
-            Like |:Jqplay| but start an interactive session in a new |:tab|
-            page using a new scratch buffer as input for jq.
+:JqplayScratch [{args}]                                       *:JqplayScratch*
+            Like |:Jqplay| but start an interactive session in a new tab page
+            using a new scratch buffer as input for jq.
 
             The scratch buffer is always passed to jq as stdin, even when the
-            -n/--null-input options have been specified in {args}.
+            -n/--null-input option has been set in {args}.
 
-            Adding "!" will create an interactive session without any input
-            buffer and force the --null-input option.
+:JqplayScratchNoInput [{args}]                         *:JqplayScratchNoInput*
+            Like |:JqplayScratch| but creates an interactive session without
+            any input buffer and always passes the --null-input option to jq.
 
 ==============================================================================
 CONFIGURATION                                                  *jqplay-config*

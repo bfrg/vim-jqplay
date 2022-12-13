@@ -19,11 +19,11 @@ whenever the input buffer or the jq filter buffer are modified similar to
 
 ### Quick Overview
 
-| Command                             | Description                                                                                |
-| ----------------------------------- | ------------------------------------------------------------------------------------------ |
-| <kbd>:Jqplay [{args}]</kbd>         | Start an interactive session using the current json buffer and the jq options `{args}`.    |
-| <kbd>:JqplayScratch [{args}]</kbd>  | Like <kbd>:Jqplay</kbd> but creates a new scratch buffer as input.                         |
-| <kbd>:JqplayScratch! [{args}]</kbd> | Like <kbd>:JqplayScratch</kbd> but forces `--null-input` and doesn't pass any input to jq. |
+| Command                                   | Description                                                                                                         |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| <kbd>:Jqplay [{args}]</kbd>               | Start an interactive session using the current json buffer and a new jq filter buffer with the jq options `{args}`. |
+| <kbd>:JqplayScratch [{args}]</kbd>        | Like <kbd>:Jqplay</kbd> but creates a new scratch buffer as input.                                                  |
+| <kbd>:JqplayScratchNoInput [{args}]</kbd> | Like <kbd>:JqplayScratch</kbd> but doesn't pass any input file to jq.                                               |
 
 ### `:Jqplay`
 
@@ -34,8 +34,8 @@ open two new windows:
    that is applied interactively to the current json buffer.
 2. The second window displays the jq output (prefixed with `jq-output://`).
 
-`{args}` can be any jq command-line arguments as you would write them in the
-shell (except for the `-f/--from-file` option and the filter).
+`{args}` can be any jq command-line options as you would pass them to jq in the
+shell.
 
 Jq is invoked automatically whenever the input buffer or the jq filter buffer
 are modified. By default jq is executed when the `InsertLeave` or `TextChanged`
@@ -61,12 +61,14 @@ run jq interactively on every buffer change, disable all autocommands and use
 
 ### `:JqplayScratch`
 
-Same as <kbd>:Jqplay</kbd> but start an interactive jq session with a new input
-buffer. The command will open an interactive session in a new tab page using a
-new scratch buffer as input. Running <kbd>:JqplayScratch!</kbd> with a bang will
-force the `-n/--null-input` option and open an interactive session without using
-any input buffer. This is useful when you don't need any input to be passed to
-jq.
+<kbd>:JqplayScratch</kbd> is like <kbd>:Jqplay</kbd> but starts an interactive
+jq session with a new scratch buffer as input.
+
+### `:JqplayScratchNoInput`
+
+<kbd>:JqplayScratchNoInput</kbd> opens an interactive session without using any
+input buffer and forces the `-n/--null-input` option. This is useful when you
+don't need any input to be passed to jq.
 
 
 ## Configuration

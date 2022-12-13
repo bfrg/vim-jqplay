@@ -15,5 +15,6 @@ g:loaded_jqplay = 1
 
 import autoload '../autoload/jqplay.vim'
 
-command       -nargs=* -complete=customlist,jqplay.Complete Jqplay        jqplay.Start(<q-mods>, <q-args>, bufnr())
-command -bang -nargs=* -complete=customlist,jqplay.Complete JqplayScratch jqplay.Scratch(<bang>false, <q-mods>, <q-args>)
+command -nargs=* -complete=customlist,jqplay.Complete Jqplay jqplay.Start(<q-mods>, <q-args>, bufnr())
+command -nargs=* -complete=customlist,jqplay.Complete JqplayScratch jqplay.Scratch(true, <q-mods>, <q-args>)
+command -nargs=* -complete=customlist,jqplay.Complete JqplayScratchNoInput jqplay.Scratch(false, <q-mods>, <q-args>)
