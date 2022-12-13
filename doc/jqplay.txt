@@ -119,38 +119,15 @@ Examples ~
        whenever insert mode is left, or text is changed in insert or normal
        mode: >
 
-       let g:jqplay = {
-               \ 'exe': '~/.local/bin/jq',
-               \ 'opts': '--tab',
-               \ 'autocmds': ['TextChanged', 'TextChangedI', 'InsertLeave']
-               \ }
+       g:jqplay = {
+           exe: '~/.local/bin/jq',
+           opts: '--tab',
+           autocmds: ['TextChanged', 'TextChangedI', 'InsertLeave']
+       }
 <
     2. Use tabs for indentation, don't run jq automatically on buffer change.
        Instead invoke jq manually with |:Jqrun|: >
 
-       let g:jqplay = {'opts': '--tab', 'autocmds': []}
-<
-==============================================================================
-FAQ                                                               *jqplay-faq*
-
-How can I override buffer settings of jq-output:// buffers? ~
-
-Option 1, use |autocommands|:
->
-    " in your vimrc or somewhere in ~/.vim/plugin/
-    augroup jq-output
-        autocmd!
-        autocmd FileType json
-            \ if bufname('%')[:11] ==# 'jq-output://' |
-            \   setlocal wincolor=NormalNC            |
-            \ endif
-    augroup END
-<
-Option 2, use a |ftplugin| file:
->
-    " in after/ftplugin/json.vim
-    if bufname('%')[:11] ==# 'jq-output://'
-        setlocal wincolor=NormalNC
-    endif
+       g:jqplay = {opts: '--tab', autocmds: []}
 <
  vim:tw=78:et:ft=help:norl:

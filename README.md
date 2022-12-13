@@ -4,7 +4,7 @@ Run [jq][jq] on a json buffer, and interactively update the output window
 whenever the input buffer or the jq filter buffer are modified similar to
 [jqplay.org][jqplay].
 
-**Note:** Plugin requires Vim `>= 8.1.1776` (no Neovim support).
+**Requirements:** Vim 9
 
 <dl>
   <p align="center">
@@ -86,16 +86,16 @@ entries are supported:
 1. Use the local jq executable, and tabs for indentation. Invoke jq whenever
    insert mode is left, or text is changed in either insert or normal mode.
    ```vim
-   let g:jqplay = {
-       \ 'exe': '~/.local/bin/jq',
-       \ 'opts': '--tab',
-       \ 'autocmds': ['TextChanged', 'TextChangedI', 'InsertLeave']
-       \ }
+   g:jqplay = {
+       exe: '~/.local/bin/jq',
+       opts: '--tab',
+       autocmds: ['TextChanged', 'TextChangedI', 'InsertLeave']
+   }
    ```
 2. Use tabs for indentation, do not run jq automatically on buffer change.
    Instead invoke jq manually with `:Jqrun`:
    ```vim
-   let g:jqplay = {'opts': '--tab', 'autocmds': []}
+   g:jqplay = {opts: '--tab', autocmds: []}
    ```
 
 
