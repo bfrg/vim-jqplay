@@ -10,7 +10,7 @@
 let s:save_cpo = &cpoptions
 set cpoptions&vim
 
-let s:running = 0               " 1 if jqplay session running, 0 otherwise
+let s:is_running = 0            " 1 if jqplay session running, 0 otherwise
 let s:in_buf = -1               " Input buffer number (optional)
 let s:in_changedtick = -1       " b:changedtick of input buffer (optional)
 let s:in_timer = 0              " timer-ID of input buffer (optional)
@@ -150,7 +150,7 @@ function s:jq_stop(...) abort
 endfunction
 
 function s:jq_close(bang) abort
-    if !s:running && !(exists('#jqplay#BufDelete') || exists('#jqplay#BufWipeout'))
+    if !s:is_running && !(exists('#jqplay#BufDelete') || exists('#jqplay#BufWipeout'))
         return
     endif
 
@@ -168,8 +168,7 @@ function s:jq_close(bang) abort
     delcommand JqplayClose
     delcommand Jqrun
     delcommand Jqstop
-    let s:running = 0
-
+    let s:is_running = 0
     call s:warning('jqplay interactive session closed')
 endfunction
 
@@ -179,11 +178,11 @@ function jqplay#start(mods, args, in_buf) abort
         return s:error('-f and --from-file options not allowed')
     endif
 
-    if s:running
+    if s:is_running
         return s:error('only one interactive session allowed')
     endif
 
-    let s:running = 1
+    let s:is_running = 1
     let s:in_buf = a:in_buf
 
     " Check if -r/--raw-output or -j/--join-output options are passed
@@ -232,7 +231,7 @@ function jqplay#start(mods, args, in_buf) abort
 endfunction
 
 function jqplay#scratch(bang, mods, args) abort
-    if s:running
+    if s:is_running
         return s:error('only one interactive session allowed')
     endif
 
