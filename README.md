@@ -19,17 +19,17 @@ whenever the input buffer or the jq filter buffer are modified similar to
 
 ### Quick Overview
 
-| Command                                   | Description                                                                                                         |
-| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| <kbd>:Jqplay [{args}]</kbd>               | Start an interactive session using the current json buffer and a new jq filter buffer with the jq options `{args}`. |
-| <kbd>:JqplayScratch [{args}]</kbd>        | Like <kbd>:Jqplay</kbd> but creates a new scratch buffer as input.                                                  |
-| <kbd>:JqplayScratchNoInput [{args}]</kbd> | Like <kbd>:JqplayScratch</kbd> but doesn't pass any input file to jq.                                               |
+| Command                          | Description                                                                            |
+| -------------------------------- | -------------------------------------------------------------------------------------- |
+| `:Jqplay [{args}]`               | Start an interactive session using the current json buffer and a new jq script buffer. |
+| `:JqplayScratch [{args}]`        | Like `:Jqplay` but creates a new scratch buffer as input.                              |
+| `:JqplayScratchNoInput [{args}]` | Like `:JqplayScratch` but doesn't pass any input file to jq.                           |
 
 ### `:Jqplay`
 
-Run <kbd>:Jqplay {args}</kbd> to start an interactive jq session using the
-current (json) buffer as input and the jq options `{args}`. The command will
-open two new windows:
+Run `:Jqplay {args}` to start an interactive jq session using the current (json)
+buffer as input and the jq options `{args}`. The command will open two new
+windows:
 1. The first window contains a jq scratch buffer (prefixed with `jq-filter://`)
    that is applied interactively to the current json buffer.
 2. The second window displays the jq output (prefixed with `jq-output://`).
@@ -43,32 +43,32 @@ events are triggered. See [configuration](#configuration) below for how to
 change the list of events when jq is invoked.
 
 Once an interactive session is started the following commands are available:
-* <kbd>:JqplayClose[!]</kbd> - Stop the interactive session. Add a `!` to also
-  delete all associated scratch buffers.
-* <kbd>:Jqrun [{args}]</kbd> - Invoke jq manually with the jq options `{args}`.
-* <kbd>:Jqstop</kbd> - Terminate a running jq process started by this plugin.
+* `:JqplayClose[!]` ─ Stop the interactive session. Add a `!` to also delete all
+  associated scratch buffers.
+* `:Jqrun [{args}]` ─ Invoke jq manually with the jq options `{args}`.
+* `:Jqstop` ─ Terminate a running jq process started by this plugin.
 
-Run <kbd>:Jqrun {args}</kbd> at any time to invoke jq manually with the jq
-arguments `{args}` and the current `jq-filter://` buffer. This will temporarily
-override the jq options previously set when starting the session with
-<kbd>:Jqplay {args}</kbd>. Add a bang to <kbd>:Jqrun!</kbd> to permanently
-override the options for the `jq-filter://` buffer.
+Run `:Jqrun {args}` at any time to invoke jq manually with the jq arguments
+`{args}` and the current `jq-filter://` buffer. This will temporarily override
+the jq options previously set when starting the session with `:Jqplay {args}`.
+Add a bang to `:Jqrun!` to permanently override the options for the
+`jq-filter://` buffer.
 
-<kbd>:Jqrun</kbd> is useful to quickly run the same jq filter with different set
-of jq options, without closing the session. Alternatively, if you don't want to
-run jq interactively on every buffer change, disable all autocommands and use
-<kbd>:Jqrun</kbd> instead.
+`:Jqrun` is useful to quickly run the same jq filter with different set of jq
+options, without closing the session. Alternatively, if you don't want to run jq
+interactively on every buffer change, disable all autocommands and use `:Jqrun`
+instead.
 
 ### `:JqplayScratch`
 
-<kbd>:JqplayScratch</kbd> is like <kbd>:Jqplay</kbd> but starts an interactive
-jq session with a new scratch buffer as input.
+This command is like `:Jqplay` but starts an interactive jq session with a new
+scratch buffer as input.
 
 ### `:JqplayScratchNoInput`
 
-<kbd>:JqplayScratchNoInput</kbd> opens an interactive session without using any
-input buffer and forces the `-n/--null-input` option. This is useful when you
-don't need any input to be passed to jq.
+Opens an interactive session with a new jq filter buffer but without using any
+input buffer. It always passes `-n/--null-input` to jq. This command is useful
+when you don't need any input file passed to jq.
 
 
 ## Configuration
@@ -79,7 +79,7 @@ entries are supported:
 | Key        | Description                                                      | Default                          |
 | ---------- | ---------------------------------------------------------------- | -------------------------------- |
 | `exe`      | Path to jq executable.                                           | value found in `$PATH`           |
-| `opts`     | Default jq command-line options (like `--tab`).                  | -                                |
+| `opts`     | Default jq command-line options (e.g. `--tab`).                  | -                                |
 | `autocmds` | Events when jq is invoked.                                       | `['InsertLeave', 'TextChanged']` |
 | `delay`    | Time in ms after which jq is invoked when an event is triggered. | `500`                            |
 
@@ -109,8 +109,8 @@ $ git clone --depth=1 https://github.com/bfrg/vim-jqplay
 $ vim -u NONE -c 'helptags vim-jqplay/doc | quit'
 ```
 **Note:** The directory name `git-plugins` is arbitrary, you can pick any other
-name. For more details see <kbd>:help packages</kbd>. Alternatively, use your
-favorite plugin manager.
+name. For more details see `:help packages`. Alternatively, use your favorite
+plugin manager.
 
 
 ## Related plugins
@@ -121,7 +121,7 @@ script files.
 
 ## License
 
-Distributed under the same terms as Vim itself. See <kbd>:help license</kbd>.
+Distributed under the same terms as Vim itself. See `:help license`.
 
 [jq]: https://github.com/stedolan/jq
 [jqplay]: https://jqplay.org
