@@ -4,7 +4,7 @@ vim9script
 # File:         autoload/jqplay.vim
 # Author:       bfrg <https://github.com/bfrg>
 # Website:      https://github.com/bfrg/vim-jqplay
-# Last Change:  Dec 13, 2022
+# Last Change:  Dec 22, 2022
 # License:      Same as Vim itself (see :h license)
 # ==============================================================================
 
@@ -229,15 +229,13 @@ export def Start(mods: string, args: string, in_buffer: number)
             group: 'jqplay',
             event: ['BufDelete', 'BufWipeout'],
             bufnr: out_buf,
-            cmd: 'Jq_close(false)',
-            replace: true
+            cmd: 'Jq_close(false)'
         },
         {
             group: 'jqplay',
             event: ['BufDelete', 'BufWipeout'],
             bufnr: filter_buf,
-            cmd: 'Jq_close(false)',
-            replace: true
+            cmd: 'Jq_close(false)'
         }
     ])
 
@@ -246,15 +244,14 @@ export def Start(mods: string, args: string, in_buffer: number)
             group: 'jqplay',
             event: ['BufDelete', 'BufWipeout'],
             bufnr: in_buffer,
-            cmd: 'Jq_close(false)',
-            replace: true
+            cmd: 'Jq_close(false)'
         }])
     endif
 
     # Run jq interactively when input or filter buffer are modified
     const events: list<string> = Getopt('autocmds')
 
-    if !empty(events)
+    if empty(events)
         return
     endif
 
@@ -262,8 +259,7 @@ export def Start(mods: string, args: string, in_buffer: number)
         group: 'jqplay',
         event: events,
         bufnr: filter_buf,
-        cmd: 'On_filter_changed()',
-        replace: true
+        cmd: 'On_filter_changed()'
     }])
 
     if Jq_with_input()
@@ -271,8 +267,7 @@ export def Start(mods: string, args: string, in_buffer: number)
             group: 'jqplay',
             event: events,
             bufnr: bufnr(),
-            cmd: 'On_input_changed()',
-            replace: true
+            cmd: 'On_input_changed()'
         }])
     endif
 enddef
