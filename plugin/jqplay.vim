@@ -4,14 +4,9 @@ vim9script
 # File:         plugin/jqplay.vim
 # Author:       bfrg <https://github.com/bfrg>
 # Website:      https://github.com/bfrg/vim-jqplay
-# Last Change:  Dec 13, 2022
+# Last Change:  Dec 24, 2023
 # License:      Same as Vim itself (see :h license)
 # ==============================================================================
-
-if exists('g:loaded_jqplay')
-    finish
-endif
-g:loaded_jqplay = 1
 
 import autoload '../autoload/jqplay.vim'
 
