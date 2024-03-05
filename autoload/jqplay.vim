@@ -66,7 +66,7 @@ def New_scratch(bufname: string, filetype: string, clean: bool, mods: string, op
             silent execute mods 'sbuffer' bufnr
         endif
     else
-        silent execute mods 'new' fnameescape(bufname)
+        noautocmd silent execute mods 'new' fnameescape(bufname)
         setlocal noswapfile buflisted buftype=nofile bufhidden=hide
         bufnr = bufnr()
         setbufvar(bufnr, '&filetype', filetype)
